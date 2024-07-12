@@ -2,6 +2,7 @@
  * @author Roberto Stefani
  * @license MIT
  */
+import * as RNLocalize from 'react-native-localize';
 import datasources from '@ares/core/datasources.js';
 import httpUtility from '@ares/web/httpUtility.js';
 import aReSContext from '@ares/core';
@@ -27,6 +28,16 @@ function exportAsMethod(aReS, mapper, datasource) {
     if(datasource.restRouter && Array.isArray(datasource.restRouter))datasource.restRouter.forEach((r) => r(aReS.server));
     });
 
-const aReS = createContext(aReSContext);
+let currentLocale = {};
+if (Platform.OS === 'web') {
+	const langT	=	navigator.language || navigator.userLanguage;
+	const langC = langT.split('-')[0];
+	currentLocale = { languageTag: langT , languageCode: langC , languageCode: langC.toUpperCase()};
+} else {
+	currentLocale = RNLocalize.getLocales()[0];
+}
+
+
+const aReS = createContext({...aReSContext, locale: {...currentLocale, values:aReSContext.i18n[currentLocale.languageCode] }});
 
 export default aReS;
