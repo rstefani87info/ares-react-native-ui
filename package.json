@@ -3,7 +3,6 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "type": "module",
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rstefani87info/ares-core.git"
@@ -40,6 +39,7 @@
     "@ares/web-ui": "github:rstefani87info/ares-web-ui#master",
     "@react-navigation/native": "^6.0.2",
     "axios": "^1.7.2",
+    "fs": "^0.0.1-security",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.52.1",
