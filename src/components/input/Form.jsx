@@ -22,7 +22,6 @@ const Form = ({
   dataDescriptor,
   objectValue,
   onSubmit,
-  onError,
   accept_charset,
   action,
   autocomplete,
