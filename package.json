@@ -5,7 +5,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rstefani87info/ares-core.git"
+    "url": "git+https://github.com/rstefani87info/ares-ui-react-native.git"
   },
   "keywords": [
     "ares",
@@ -20,9 +20,9 @@
   "author": "Roberto Stefani",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rstefani87info/ares-core/issues"
+    "url": "https://github.com/rstefani87info/ares-ui-react-native/issues"
   },
-  "homepage": "https://github.com/rstefani87info/ares-core#readme",
+  "homepage": "https://github.com/rstefani87info/ares-ui-react-native#readme",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
