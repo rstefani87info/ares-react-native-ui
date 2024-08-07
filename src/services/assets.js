@@ -6,11 +6,7 @@ import fonts from "../../../../../src/styles/fonts.json";
 * Get all images as react components from images.json
 * @returns {Object}
 * 
-* @desc {en} Get all images from images.json
-* @desc {it} Ottieni tutte le immagini da images.json
-* @desc {es} Obtener todas las imágenes de images.json
-* @desc {pt} Obtenha todas as imagens de images.json
-* @desc {fr} Obtenez toutes les images de images.json   
+* Get all images from images.json
 */
 export function getAllAsImages() {
     const imageMap =  images;
@@ -25,11 +21,7 @@ export function getAllAsImages() {
 * Get all images as background images from images.json
 * @returns {Object}
 *
-* @desc {en} Get all images from images.json
-* @desc {it} Ottieni tutte le immagini da images.json
-* @desc {es} Obtener todas las imágenes de images.json
-* @desc {pt} Obtenha todas as imagens de images.json
-* @desc {fr} Obtenez toutes les images de images.json
+* Get all images from images.json
 */
 export function getAllAsBackgroundImages() {
     const imageMap =  images;
