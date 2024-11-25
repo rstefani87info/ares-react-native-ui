@@ -6,15 +6,18 @@ import PropTypes from 'prop-types';
 
 export const defaultCountry = countries.US;
 
-export function translate(key, country = defaultCountry) {
-  let language;
-  if(country) {
+export function translate(key, country = defaultCountry, language) {
+  
+  if(country && !language) {
     language = country.defaultLanguage;
   }
-  if(typeof key === 'function' ) return key(
-    language?.strings, language
-  );
-  return getByPropertyPath(language.strings,key) ?? key;
+  console.debug('translate', key, language,language?.strings);
+
+  if(typeof key === 'string') 
+    return getByPropertyPath(language.strings,key) ?? key;
+  else if(key instanceof Function) {
+    return key(language.strings,language,country);
+  }
 } 
 
 TranslateAsTextNode.propTypes = {
@@ -23,6 +26,6 @@ TranslateAsTextNode.propTypes = {
   country: PropTypes.object,
   language: PropTypes.string,
 };
-export function TranslateAsTextNode({key, country = defaultCountry, ...props}) {
-  return <Text {...props}>{translate(key instanceof Function ? key() : key, country)}</Text>;
+export function TranslateAsTextNode({text, country = defaultCountry, language, ...props}) {
+  return <Text {...props}>{translate(text, country)}</Text>;
 } 

@@ -1,9 +1,8 @@
 
-import * as implicitAssets from './assets';
 import * as implicitColors from './colors';
-// export * as variables from './variables';
-import * as styles from './stylesheet';
-import mainTheme from './themes/mainTheme';
+import implicitAssets from '../../../../styles/assets';
+import * as styles from '../../../../styles/stylesheet';
+import mainTheme from '../../../../styles/themes/mainTheme';
 
 export const assets= {
     ...implicitAssets
@@ -30,13 +29,14 @@ Object.entries(themeList).map(([key, value]) => {
 });
 
 export function getStyle(config, type=null, name=null){
+    let ret={};
     if(config && type && name)
-        return {...(config[type]? (config[type][name]||{} ): {} ),...(config[type]? (config[type]['*']||{}) : {} )}
-    if(config && type )
-        return  config[type]? (config[type]['*']||{}) : {};
-    if(config )
-        return  config['.']||{}
-    return{};
+        ret = Object.assign(getStyle(config, type),(config[type]? (config[type][name]??{} ): {} )) ??{};
+    else if(config && type )
+        ret = Object.assign((config['*']??{}),  ( config[type]? config[type] : {})) ??{};
+    else if(config )
+        ret =  config['.']??{}
+    return ret;
 }
 
 

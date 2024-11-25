@@ -28,6 +28,8 @@ const Google = {
           console.error("stack", error.stack);
         }
       });
+
+      return this;
   },
   getUserAdditionalInfo: async function (accessToken) {
     try {
@@ -49,19 +51,40 @@ const Google = {
   },
 
   hasPlayServices: async function () {
-    return wait(GoogleSignIn.hasPlayServices());
+    const result = await GoogleSignin.hasPlayServices();
+    if(!result){
+      this.handleError({code: statusCodes.PLAY_SERVICES_NOT_AVAILABLE});
+    }
+    return result;
   },
 
   signIn: async function () {
     try{
-      this.userInfo = await wait(GoogleSignIn.signIn());
+       this.userInfo = await GoogleSignin.signIn();
+       return this.userInfo;
     }catch(error){
       this.handleError(error);
     }
   },
 
   signOut: async function () {
-    return wait(GoogleSignIn.signOut());
+    try {
+      const logout = await GoogleSignin.signOut();
+      console.log("Successfully signed out");
+      return logout;
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  },
+
+  getTokenInfo: async function (token) {
+    try {
+      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`);
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching token info:", error);
+      throw error;
+    }
   },
 };
 export default Google;

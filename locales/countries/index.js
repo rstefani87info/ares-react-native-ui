@@ -1,5 +1,4 @@
 import languages, { defaultLang } from '../languages';
-import * as assets from '../../styles/assets';
 const countries = {
   US: {
     label: 'United_States',
@@ -13,7 +12,6 @@ const countries = {
     ssn: /^(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}$/,
     languages: [languages.enUS],
     defaultLanguage: languages.enUS,
-    icon: assets.images.icons.flags.ic_flag_us,
   },
   IT: {
     label: 'Italy',
@@ -27,7 +25,6 @@ const countries = {
     ssn: /^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/,
     languages: [languages.itIT],
     defaultLanguage: languages.itIT,
-    icon:  assets.images.icons.flags.ic_flag_it,
   }
 };
 

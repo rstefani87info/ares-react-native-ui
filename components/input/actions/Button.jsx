@@ -1,56 +1,55 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import PropTypes from 'prop-types';
-import { Image, TouchableOpacity, View, Alert} from 'react-native';
-import {globalStyle, themes} from '../../../styles';
+import {Pressable} from 'react-native';
+import {getStyle} from '../../../styles';
 import * as i18n from '../../../locales/i18n';
-import {getStyle} from "../../../utils/style";
 
 Button.propTypes = {
   url: PropTypes.string,
-  showIcon: PropTypes.oneOfType([PropTypes.number, PropTypes.string, PropTypes.object]),
+  icon:  PropTypes.any,
   style: PropTypes.object,
-  onPressStyle: PropTypes.object,
   onPress: PropTypes.func,
   text: PropTypes.string,
-  textStyle: PropTypes.object,
 };
 export default function Button({
-  showIcon=null,
+  icon,
   style,
   onPress,
   text,
-  textStyle,
-  height = 24,
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
-  const handlePress = () => {
-    setIsPressed(true);
-    onPress();
-    setTimeout(() => setIsPressed(false), 1000);
-  };
-  return (
-    <TouchableOpacity
-      style={ 
-        [isPressed ? getStyle(style[':onPress']) : getStyle(style), {height}]
-        [getStyle(style)]
+  const [wrapperStyle, setWrapperStyle] = React.useState(getStyle(style) ?? {});
+  const [iconStyle, setIconStyle] = React.useState(getStyle(style,'icon') ?? {});
+  const [textStyle, setTextStyle] = React.useState(getStyle(style,'text') ?? {textAlign: 'center'});
+  // const handlePress = async () => {
+  //   console.log('pressed');
+  //   setIsPressed(true);
+  //   await onPress();
+  //   setTimeout(() => setIsPressed(false), 500);
+  // };
 
-      }
-      onPressIn={handlePress} >
-      {showIcon && (
-        <Image 
-          source={showIcon} 
-          style={ 
-            [isPressed ? getStyle(style[':onPress'],'icon') : getStyle(style), {height}]
-            [getStyle(style,'icon')]} 
-        />
-      )}
-      <View style={
-        [isPressed ? getStyle(style[':onPress'],'text') : getStyle(style), {height}]
-        [getStyle(style,'text')]
+  useEffect(() => {
+    if(isPressed){    
+      setWrapperStyle(Object.assign({},getStyle(style) ?? {},getStyle(style[':onPress']) ?? {}));
+      setIconStyle(Object.assign({}, getStyle(style,'icon') ?? {},getStyle(style[':onPress'],'icon') ?? {}));
+      setTextStyle(Object.assign({} , getStyle(style,'text') ?? {},getStyle(style[':onPress'],'text') ?? {textAlign: 'center'}));
+    }
+    else {
+      setWrapperStyle(getStyle(style) ?? {});
+      setIconStyle(getStyle(style,'icon') ?? {});
+      setTextStyle(getStyle(style,'text') ?? {textAlign: 'center'});
+    }
+  }, [isPressed,style,getStyle]);
+  
+  return (
+    <Pressable
+      style={wrapperStyle}
+      onPress={
+        onPress
         } >
-        {text && i18n.TranslateAsTextNode(text,undefined,[textStyle, { textAlign: 'center' }])}
-      </View>
-    </TouchableOpacity>
+      {icon && icon instanceof Function &&  icon({style:iconStyle}) }
+      {text && i18n.TranslateAsTextNode({text,style:textStyle}) } 
+    </Pressable>
 
   );
 }

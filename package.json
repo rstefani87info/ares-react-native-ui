@@ -42,6 +42,8 @@
     "@react-native-google-signin/google-signin": "^12.2.1",
     "@react-navigation/native-stack": "^6.11.0",
     "@reduxjs/toolkit": "^2.3.0",
+    "expo-av": "^15.0.1",
+    "expo-linking": "^7.0.3",
     "lodash": "^4.17.21",
     "prop-types": "^15.8.1",
     "react": "18.3.1",

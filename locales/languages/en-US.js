@@ -1,6 +1,15 @@
 const en={
-    "google":{
-        "access_with":"Access with Google",
+    ares:{
+        components:{
+            input:{
+                fields:{
+                    Text:{
+                        not_allowed_digit:(char,name)=>`Char "${char}" is not allowed in "${name}"`,
+                        not_allowed_value:(char,name)=>`Value "${value}" is not allowed in "${name}"`,
+                    }
+                }
+            }
+        }
     }
 }
 

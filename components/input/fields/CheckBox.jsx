@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { createRef } from "react";
 import { Text } from "./Text.jsx";
 import { Button } from "../actions/Button";
-import { getStyle } from "../../../utils/style.js";
+import {getStyle} from '../../../styles';
 
 CheckBox.propTypes = {
     id: PropTypes.string.isRequired,

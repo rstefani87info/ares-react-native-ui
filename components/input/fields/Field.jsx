@@ -6,8 +6,7 @@ import { CheckBox } from "./CheckBox";
 import { Switch } from "./Switch";
 import { Text } from "./Text";
 import Button from "../actions/Button";
-import { getStyle } from "../../../utils/style";
-import { p } from "../../../styles/stylesheet";
+import {getStyle} from '../../../styles';
 import { View } from "react-native";
 
 export const types = {

@@ -1,8 +1,5 @@
 import React, { createContext, useReducer, useEffect } from 'react';
-import aReS from '../ares.js';
-import * as place4partyDS from '../datasources/place4party/datasource';
-
-const datasourceList = [place4partyDS];
+import aReS from '../../../../ares';
 
 export const ARESContext = createContext();
 
@@ -40,11 +37,11 @@ export const ARESProvider = ({ children }) => {
 
     const fetchDatasources = async () => {
         try {
-            await aReS.initAllDatasources(datasourceList);
+            await aReS.initAllDatasources(aReS.datasourceListToBeInstalled);
             dispatch({ type: 'FETCH_DATASOURCES', payload: aReS.datasourceMap });
         } catch (error) {
-            console.error('ARESProvider.fetchDatasources error:', error);
-            dispatch({ type: 'SET_ERROR', payload: error.message });
+            aReS.console.error('ARESProvider fetchDatasources error:', error , error.getStackTrace());
+            dispatch({ type: 'SET_ERROR', payload: error?.message ?? 'Unknown error' });
         }
     };
 
