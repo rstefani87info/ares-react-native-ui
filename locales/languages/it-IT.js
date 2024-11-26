@@ -9,6 +9,17 @@ const it={
                     }
                 }
             }
+        },
+        geolocation: {
+            permission_denied: 'Non hai autorizzato l\'accesso alla tua posizione.',
+            current_coordinates: 'Coordinate attuali',
+            no_results: 'Non sono stati trovati risultati per la tua ricerca.',
+        },
+        google:{
+            sign_in_error: "Errore nel login con Google",
+            sign_out_error: "Errore nel logout da Google",
+            fetching_token_error: "Errore nell\'acquisizione di informazioni dal token",
+            reverse_geocode_error:'Errore nella traduzione della posizione',
         }
     }
 }

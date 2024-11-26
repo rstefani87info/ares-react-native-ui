@@ -3,15 +3,18 @@ import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import * as i18n from "../locales/i18n";
 
 const Google = {
   setup: function (settings) {
+    this.settings = settings;
     GoogleSignin.configure({
       scopes: settings?.scopes ?? [],
       androidClientId: settings?.android?.client?.id,
       webClientId: settings?.web?.client?.id,
       offlineAccess: settings?.offlineAccess ?? true,
       redirectUri: settings[Platform.OS].redirectUri,
+      apiKey: settings?.apiKey,
     });
 
     this.handleError =
@@ -63,6 +66,7 @@ const Google = {
        this.userInfo = await GoogleSignin.signIn();
        return this.userInfo;
     }catch(error){
+      console.error(`${i18n.translate("ares.google.sign_in_error")}:`, error);
       this.handleError(error);
     }
   },
@@ -73,7 +77,7 @@ const Google = {
       console.log("Successfully signed out");
       return logout;
     } catch (error) {
-      console.error("Error during sign out:", error);
+      console.error(`${i18n.translate("ares.google.sign_out_error")}:`, error);
     }
   },
 
@@ -82,7 +86,18 @@ const Google = {
       const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`);
       return await response.json();
     } catch (error) {
-      console.error("Error fetching token info:", error);
+      console.error(`${i18n.translate("ares.google.fetching_token_error")}:`, error);
+      throw error;
+    }
+  },
+
+  reverseGeocode: async function (latitude, longitude) {
+    try {
+      const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${this.settings.apiKey}`);
+      const data = await response.json();
+      return data.results[0].formatted_address;
+    } catch (error) {
+      console.error(`${i18n.translate("ares.google.reverseGeocodeError")}:`, error);
       throw error;
     }
   },
