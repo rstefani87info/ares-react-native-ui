@@ -1,4 +1,5 @@
-export * from './languages';
 
-export { default as useLocales } from './useLocales';
+export * as i18n from './i18n';
+export * as locations from './locations';
+
 

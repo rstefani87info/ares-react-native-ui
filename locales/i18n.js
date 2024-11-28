@@ -2,7 +2,7 @@ import { Text } from 'react-native';
 import PropTypes from 'prop-types';
 import * as Localize from '@react-native-community/react-native-localize';
 import {getByPropertyPath} from '@ares/core/scripts'
-import {flterLike} from '@ares/core/text';
+import {filterLike} from '@ares/core/text';
 import countries from './countries';
 import languages from './languages';
 

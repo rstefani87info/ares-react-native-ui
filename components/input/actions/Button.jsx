@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {Pressable} from 'react-native';
 import {getStyle} from '../../../styles';
-import * as i18n from '../../../locales/i18n';
+import {i18n} from '../../../locales';
 
 Button.propTypes = {
   url: PropTypes.string,

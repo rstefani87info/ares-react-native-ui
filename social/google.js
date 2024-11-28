@@ -3,7 +3,7 @@ import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import * as i18n from "../locales/i18n";
+import {i18n} from "../locales";
 
 const Google = {
   setup: function (settings) {
