@@ -2,7 +2,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {regexMap} from '@ares/core/dataDescriptors';
-import {generateRandomString} from '@ares/core/text';
 import {getStyle} from '../../../styles';
 
 
