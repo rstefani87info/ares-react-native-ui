@@ -150,8 +150,8 @@ export const hexShades = { };
 for (const key in rgbShades) {
   hexShades[key] = convertToHexShade(rgbShades[key]);
 }
-export const white = [255, 255, 255];
-export const black = [0, 0, 0];
+export const white = {r: 255, g: 255, b: 255, a: 1};
+export const black ={r: 0, g: 0, b: 0, a: 1};
 
 export function convertRGBAToCSSColor(r, g, b, a = 1) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
@@ -187,7 +187,7 @@ export function getHexShade(color, step = 55) {
 
 export function convertToHexShade(rgbShade) {
   return {
-    white,
+    white: convertRGBToHex(white),
     lightest : convertRGBToHex(...rgbShade.lightest),
     lighter : convertRGBToHex(...rgbShade.lighter),
     light : convertRGBToHex(...rgbShade.light),
@@ -195,7 +195,7 @@ export function convertToHexShade(rgbShade) {
     dark : convertRGBToHex(...rgbShade.dark),
     darker : convertRGBToHex(...rgbShade.darker),
     darkest : convertRGBToHex(...rgbShade.darkest),
-    black,
+    black: convertRGBToHex(black),
   };
 }
 
@@ -263,3 +263,15 @@ export function getHexDarker(color, step = '37' /* 55d = 37h */) {
 export const transparent = {
   transparent: 'transparent',
 };
+
+export function parseRGBA(string) {
+  const result = /(\d+),(\d+),(\d+)(,\d+)/i.exec(string);
+  return result
+    ? {
+        r: parseInt(result[1], 10),
+        g: parseInt(result[2], 10),
+        b: parseInt(result[3], 10),
+        a: result[4] ? parseFloat(result[4]) : 1,
+      }
+    : null;
+}
