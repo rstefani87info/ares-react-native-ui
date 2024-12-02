@@ -150,8 +150,8 @@ export const hexShades = { };
 for (const key in rgbShades) {
   hexShades[key] = convertToHexShade(rgbShades[key]);
 }
-export const white = {r: 255, g: 255, b: 255, a: 1};
-export const black ={r: 0, g: 0, b: 0, a: 1};
+export const white = [255, 255, 255, 1];
+export const black = [0, 0, 0, 1];
 
 export function convertRGBAToCSSColor(r, g, b, a = 1) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
@@ -187,7 +187,7 @@ export function getHexShade(color, step = 55) {
 
 export function convertToHexShade(rgbShade) {
   return {
-    white: convertRGBToHex(white),
+    white: convertRGBToHex(...white),
     lightest : convertRGBToHex(...rgbShade.lightest),
     lighter : convertRGBToHex(...rgbShade.lighter),
     light : convertRGBToHex(...rgbShade.light),
@@ -195,7 +195,7 @@ export function convertToHexShade(rgbShade) {
     dark : convertRGBToHex(...rgbShade.dark),
     darker : convertRGBToHex(...rgbShade.darker),
     darkest : convertRGBToHex(...rgbShade.darkest),
-    black: convertRGBToHex(black),
+    black: convertRGBToHex(...black),
   };
 }
 

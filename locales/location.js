@@ -1,6 +1,8 @@
+
 import Geolocation from 'react-native-geolocation-service';
 import {PermissionsAndroid, Platform} from 'react-native';
 import * as i18n from './i18n';
+import * as countries from './countries';
 
 export const defaultCountry = countries.US;
 

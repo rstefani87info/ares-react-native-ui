@@ -18,9 +18,9 @@ export default function Button({
   text,
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
-  const [wrapperStyle, setWrapperStyle] = React.useState(getStyle(style) ?? {});
-  const [iconStyle, setIconStyle] = React.useState(getStyle(style,'icon') ?? {});
-  const [textStyle, setTextStyle] = React.useState(getStyle(style,'text') ?? {textAlign: 'center'});
+  const [wrapperStyle, setWrapperStyle] = React.useState(style?(getStyle(style) ?? {}) : {});
+  const [iconStyle, setIconStyle] = React.useState(style ? (getStyle(style, 'icon') ?? {}): {});
+  const [textStyle, setTextStyle] = React.useState(style ? (getStyle(style,'text') ?? {textAlign: 'center'}) : {textAlign: 'center'});
   // const handlePress = async () => {
   //   console.log('pressed');
   //   setIsPressed(true);

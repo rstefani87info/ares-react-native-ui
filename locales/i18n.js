@@ -1,13 +1,13 @@
 import { Text } from 'react-native';
 import PropTypes from 'prop-types';
-import * as Localize from '@react-native-community/react-native-localize';
+import * as Localize from 'react-native-localize';
 import {getByPropertyPath} from '@ares/core/scripts'
 import {filterLike} from '@ares/core/text';
 import countries from './countries';
 import languages from './languages';
 
 
-
+const defaultCountry = countries.US;
 
 export function getCurrentLanguage(){
   const locales =  global.countryCode || Localize.getLocales();
@@ -55,6 +55,9 @@ TranslateAsTextNode.propTypes = {
   country: PropTypes.object,
   language: PropTypes.string,
 };
-export function TranslateAsTextNode({text, country = defaultCountry, language, ...props}) {
+export function TranslateAsTextNode({text, country, language, ...props}) {
+  if (!country ) {
+    country = global.countryCode? countries[global.countryCode]: defaultCountry;
+  }
   return <Text {...props}>{translate(text, country)}</Text>;
 } 
