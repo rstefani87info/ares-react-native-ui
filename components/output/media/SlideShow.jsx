@@ -5,7 +5,7 @@ import {
   Dimensions,
   Image,
 } from "react-native";
-import Carousel from 'react-native-snap-carousel';
+import Carousel from 'react-native-reanimated-carousel';
 
 export default function SlideShow({
   items,
@@ -22,13 +22,19 @@ export default function SlideShow({
         style={[getStyle(style, "image")??{}]} />
     </View>
   );
-
+ const realStyle = Object.assign({},getStyle(style, "image")??{},  styles.slide);
   return (
     <Carousel
       data={data}
       renderItem={renderItem}
-      sliderWidth={width}
-      itemWidth={width}
+      width={realStyle.width}
+      height={realStyle.height} 
+      mode="stack" 
+      modeConfig={{
+        stackInterval: 30,  
+        scaleInterval: 0.08, 
+      }}
+      style={realStyle}
     />
   );
 };
