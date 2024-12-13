@@ -1,49 +1,83 @@
 import React from "react";
+import PropTypes from "prop-types";
 import {
-  ScrollView,
-  StyleSheet,
   Dimensions,
-  Image,
 } from "react-native";
-import Carousel from 'react-native-reanimated-carousel';
 
+import Carousel from 'react-native-reanimated-carousel';
+import {getStyle} from '../../../styles';
+import Image from './Image';
+import Video from './Video';
+import Base from "./Base";
+
+
+
+SlideShow.propTypes = {
+  content: PropTypes.oneOfType([PropTypes.string,PropTypes.object,PropTypes.number]).isRequired,
+  title: PropTypes.string,
+  description: PropTypes.string,
+  tags: PropTypes.arrayOf(PropTypes.string),
+  embeddingRegexMap: PropTypes.object,
+  style: PropTypes.object,
+  onPress: PropTypes.func,
+};
 export default function SlideShow({
-  items,
+  content,
+  title,
+  description,
+  tags,
+  embeddingRegexMap,
+  onPress,
   width = Dimensions.get("window").width,
   height = Dimensions.get("window").height,
-  style
+  style,
+  ...props
 }) {
   
-  const renderItem = ({ item }) => (
-    <View style={[getStyle(style, "item")??styles.slide, { backgroundColor: item.color , height, width}]}>
-      <Text>{item.title}</Text>
-      <Image
-        source={item.image}
-        style={[getStyle(style, "image")??{}]} />
-    </View>
-  );
- const realStyle = Object.assign({},getStyle(style, "image")??{},  styles.slide);
-  return (
+ const renderItem = ({ item }) => ( 
+  <>{item.type==="image" && <Image content={item.content} {...item.config} style={[{width:item.width??width*0.75,height:item.height??height*0.75},getStyle(style, "image", item.id)]} />}
+  {item.type==="video" && <Video content={item.content} {...item.config} style={[{width:item.width??width*0.75,height:item.height??height*0.75},getStyle(style, "video", item.id)]} />}
+  {item.type==="array" && <SlideShow content={item.content} {...item.config} style={[{width:item.width??width*0.75,height:item.height??height*0.75},getStyle(style, "video", item.id)]} />}
+  {item.type==="component" && item.content }</> 
+);
+
+ const realStyle = Object.assign({width, height},getStyle(style, "wrapper")??{
+  alignItems: "center",
+  justifyContent: "center",
+  width,
+  height,
+});
+  const baseComponent = ()=>(
     <Carousel
-      data={data}
+      autoPlayInterval={2000}
+      data={content}
       renderItem={renderItem}
-      width={realStyle.width}
-      height={realStyle.height} 
-      mode="stack" 
-      modeConfig={{
-        stackInterval: 30,  
-        scaleInterval: 0.08, 
-      }}
+      width={width * 0.75}
+      height={height}
+      loop={true}
+				mode={"horizontal-stack"}
+				modeConfig={{
+					snapDirection: "left",
+					stackInterval: 18,
+				}}
+				customConfig={() => ({ type: "positive", viewCount: 5 })}
       style={realStyle}
+      {...props}
     />
   );
-};
 
-const styles = StyleSheet.create({
-  slide: {
-    width: width,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 300,
-  },
-});
+  return (
+    <Base
+    content={content}
+    title={title}
+    type="array"
+    description={description}
+    tags={tags}
+    embeddingRegexMap={embeddingRegexMap}
+    style={style}
+    baseComponent={baseComponent}
+     { ...props}
+    />
+  );
+}
+ 

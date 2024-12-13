@@ -1,47 +1,39 @@
-import { Video } from "expo-av";
+import { Image as ImageComponent, Pressable} from "react-native";
+import { WebView } from "react-native-webview";
 import PropTypes from "prop-types";
 import { i18n } from "../../../locales";
 import { getStyle } from "../../../styles";
 
+
 Image.propTypes = {
-  content: PropTypes.string.isRequired,
+  content: PropTypes.oneOfType([PropTypes.string,PropTypes.object,PropTypes.number]).isRequired,
   title: PropTypes.string,
   description: PropTypes.string,
   tags: PropTypes.arrayOf(PropTypes.string),
+  regexMap: PropTypes.object,
+  style: PropTypes.object,
 };
-export default function Image({ content, title, description, tags, regexMap }) {
-  let source = content;
-
-  if (typeof content === "string") {
-    source = {uri:content};
-    for (let platform in regexMap) {
-      if (platform.match(/video/i)) {
-        const { pattern } = regexMap[platform];
-        if (pattern.test(content)) {
-          return (
-            <WebView
-              originWhitelist={["*"]}
-              source={source}
-              style={getStyle(style, "wrapper")}
-            />
-          );
-        }
-      }
-    }
-
-    return (
-      <Image
-        source={source}
-        useNativeControls
-        resizeMode="contain"
-        style={[getStyle(style, "content"),getStyle(style, "wrapper"),getStyle(style, "image")]}
-      />
-    );
-  }
-  return (
-    <i18n.TranslateAsTextNode
-      text="ares.media.video.not_supported"
-      style={getStyle(style, "error")}
-    />
-  );
+export default function Image({ content, title, description, tags, regexMap = {}, style, ...props }) {
+ 
+  const baseComponent = ()=>(
+        <ImageComponent
+          source={content}
+          useNativeControls
+          resizeMode="cover"
+          style={[{width: '80%', height: '80%'},getStyle(style, "content"),getStyle(style, "wrapper"),getStyle(style, "image")]}
+        />
+      );
+     
+      return (
+        <Base
+        content={content}
+        title={title}
+        description={description}
+        tags={tags}
+        embeddingRegexMap={embeddingRegexMap}
+        style={style}
+        baseComponent={baseComponent}
+         { ...props}
+        />
+      );
 }

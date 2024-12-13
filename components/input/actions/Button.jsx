@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {Pressable} from 'react-native';
-import {getStyle} from '../../../styles';
+import {getStyle} from '../../../styles/index';
 import {i18n} from '../../../locales';
 
 Button.propTypes = {
@@ -18,7 +18,8 @@ export default function Button({
   text,
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
-  const [wrapperStyle, setWrapperStyle] = React.useState(style?(getStyle(style) ?? {}) : {});
+  console.log('getStyle::::::::::::',getStyle.toString(),style);
+  const [wrapperStyle, setWrapperStyle] = React.useState(style ? (getStyle(style) ?? {}) : {});
   const [iconStyle, setIconStyle] = React.useState(style ? (getStyle(style, 'icon') ?? {}): {});
   const [textStyle, setTextStyle] = React.useState(style ? (getStyle(style,'text') ?? {textAlign: 'center'}) : {textAlign: 'center'});
   // const handlePress = async () => {
