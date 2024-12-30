@@ -3,7 +3,6 @@ import { View } from "react-native";
 import { createRef } from "react";
 import { Text } from "./Text.jsx";
 import { Button } from "../actions/Button";
-import {getStyle} from '../../../styles';
 
 CheckBox.propTypes = {
     id: PropTypes.string.isRequired,
@@ -34,8 +33,8 @@ export function CheckBox(
   }
 ) {
 
-  const [newStyle, setNewStyle] = useState({input:{ [name]: {width:10, height:10 , borderColor:'grey', borderWidth:1 , ...getStyle(style??{},"input",name)}}});
-  const [newLabelStyle, setNewLabelStyle] = useState({label:{ [`${name}_label`]: {width:10, height:10 , borderColor:'grey', borderWidth:1 , ...getStyle(style??{},"label",`${id}_label`)}}});
+  const [newStyle, setNewStyle] = useState({input:{ [name]: {width:10, height:10 , borderColor:'grey', borderWidth:1 , ...(style?.input ?? {}) }}});
+  const [newLabelStyle, setNewLabelStyle] = useState({label:{ [`${name}_label`]: {width:10, height:10 , borderColor:'grey', borderWidth:1 , ...(style?.placeholder ?? {})}}});
     const getOptionValue = (item) => item.value;
     const getOptionText = (item) => item.text;
     const options = [

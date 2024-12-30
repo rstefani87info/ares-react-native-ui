@@ -2,7 +2,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {regexMap} from '@ares/core/dataDescriptors';
-import {getStyle} from '../../../styles';
 
 
 HTML.propTypes = {
@@ -55,7 +54,7 @@ export default function HTML({code, style, injectableScript, recognizeStylableNo
     return (
         <WebView 
             source={{ source }} 
-            style={getStyle(style)} 
+            style={style} 
             injectJavaScript={script} 
             onMessage={handleMessage}
             javaScriptEnabled={true}

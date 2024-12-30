@@ -6,7 +6,6 @@ import { CheckBox } from "./CheckBox";
 import { Switch } from "./Switch";
 import { Text } from "./Text";
 import Button from "../actions/Button";
-import {getStyle} from '../../../styles';
 import { View } from "react-native";
 
 export const types = {
@@ -528,7 +527,7 @@ export default function Field({
   ...props
 }) {
   const existingType = dataDescriptors['@get'](type);
-  if(!mask) mask = (node) => (<View style={getStyle(style,'field-wrapper', name)}>{isEmpty(label) && <Text style={getStyle(style,'field-lebel', name)}>{label}</Text>} {node}</View>);
+  if(!mask) mask = (node) => (<View style={style?.wrapper ?? {}}>{isEmpty(label) && <Text style={style?.label ?? {}}>{label}</Text>} {node}</View>);
   if (existingType) {
     return mask(label,existingType({ id, name, placeholder, style, ...props }));
   } else if (type instanceof Function) {

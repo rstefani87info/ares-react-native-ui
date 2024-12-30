@@ -2,6 +2,7 @@ import * as implicitColors from "./colors";
 import implicitAssets from "../../../../styles/assets";
 import * as styles from "../../../../styles/stylesheet";
 import mainTheme from "../../../../styles/themes/mainTheme";
+import PropTypes from "prop-types";
 
 export const assets = implicitAssets;
 
@@ -12,22 +13,47 @@ export const globalStyle = styles;
 export const themeList = { mainTheme };
 
 //TODO: convertire in sistemma a puntamenti css
-export function getStyle(config, type = null, name = null) {
-  let ret = {};
-  if (config && (type || name)) {
-    if (type)
-      ret =
-        Object.assign(config["*"] ?? {}, config[type] ? config[type] : {}) ??
-        {};
-    if (name)
-      ret =
-        Object.assign(
-          ret,
-          config[name] ?? {},
-          config[type] ? config[type][name] ?? {} : {}
-        ) ?? {};
-  } else if (config) ret = config["."] ?? {};
-  return ret;
+// export function getStyle(config, type = null, name = null) {
+//   let ret = {};
+//   if (config && (type || name)) {
+//     if (type)
+//       ret =
+//         Object.assign(config["*"] ?? {}, config[type] ? config[type] : {}) ??
+//         {};
+//     if (name)
+//       ret =
+//         Object.assign(
+//           ret,
+//           config[name] ?? {},
+//           config[type] ? config[type][name] ?? {} : {}
+//         ) ?? {};
+//   } else if (config) ret = config["."] ?? {};
+//   return ret;
+// }
+
+LinearGradient.propTypes = {
+  direction: PropTypes.shape({
+    start: PropTypes.number,
+    end: PropTypes.number,
+  }).isRequired,
+  colorDisposition: PropTypes.arrayOf(PropTypes.shape({
+    color: PropTypes.string,
+    percentage: PropTypes.number
+  })),
+};
+
+export function LinearGradient({direction,colorDisposition, opacity, style, ...props}){
+  const newArray = colorDisposition.filter(e=> colors.Color.parse(e.color) && e.percentage>=0 && e.percentage<=1).sort((a,b) => a.percentage - b.percentage).map(x => x.color);
+  return <LinearGradient
+        colors={newArray.filter(x => x)}
+        locations={newArray.map((x, index) => index ).filter(x => newArray[x]).map(x => x / 100)} 
+        start={direction.start}
+        end={direction.end}
+        style={[style?.gradient||{}, {position:absolute}]}
+        {...props}
+      >
+        <View style={[style?.container||{},{width:"100%",height:"100%"}]}>{{content}}</View>
+      </LinearGradient>
 }
 
 // export function getStyleConfigToCSS(config,parentKey = null, parent=null) {

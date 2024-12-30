@@ -16,7 +16,6 @@ import dateAndTime from '@ares/core/dateAndTime';
 import _, { add } from "lodash";
 import PropTypes from "prop-types";
 import { useFormContext } from "react-hook-form";
-import {getStyle} from "../../../styles";
 import Button from "../actions/Button";
 import * as i18n from '../../../locales/i18n';
 
@@ -89,8 +88,6 @@ export function Text({
   let typeAsset = {
     keyboardType: "default",
   };
-  
-  
 
   const [optionList, setOptionList] = useState(options.sort(sortOptions));
   const [open, setOpen] = useState(false);
@@ -137,8 +134,6 @@ export function Text({
     }, 300),
     [reference, onChangeValue]
   );
-
-  
 
   const filteredOptions = useMemo(() => {
     return filterData();
@@ -242,19 +237,20 @@ export function Text({
 
   let regex = null;
   let additionalComponent = {render:null,trigger:null}; };
-  if (type === "number") {
-    typeAsset = { keyboardType: "numeric" };
-    regex = /^[0-9]*$/;
-  } else if (type === "tel") {
-    typeAsset = { keyboardType: "phone-pad" };
-    regex = /^[+\d-\s\.\\\/]$/;
-  } else if (type === "email") {
-    typeAsset = { keyboardType: "email-address" };
-    regex = /^[\w\._%+-@]$/;
-  } else if (type === "password") typeAsset = { secureTextEntry: true };
-  else if (type === "url") typeAsset = { keyboardType: "url" };
-  else if (type === "date" || type === "datetime") typeAsset = { keyboardType: "phone-pad" };
-  else if(type==='date' || type==='datetime' || type==='time' || type==='countdown'){
+
+  const types={
+    number:{typeAsset:{keyboardType:"numeric"},regex:/^[0-9]*$/},
+    tel:{typeAsset:{keyboardType:"phone-pad"},regex:/^[+\d-\s\.\\\/]$/},
+    email:{typeAsset:{keyboardType:"email-address"},regex:/^[\w\._%+-@]$/},
+    password:{typeAsset:{secureTextEntry:true}},
+    url:{typeAsset:{keyboardType:"url"}},
+    date:{typeAsset:{keyboardType:"phone-pad"}, onLoad: onTimingType},
+    datetime:{typeAsset:{keyboardType:"phone-pad"}}, onLoad: onTimingType,
+    time:{typeAsset:{keyboardType:"phone-pad"}, onLoad: onTimingType},
+    countdown:{typeAsset:{keyboardType:"phone-pad"}, onLoad: onTimingType},
+  };
+  
+  const onTimingType =()=>{
       props.editable = false;
       const [show, setShow] = useState(false);
       const dateFormat = i18n.translate(type);
@@ -386,7 +382,7 @@ export function Text({
                 height: e.nativeEvent.height,
               });
           }}
-          style={getStyle(style, "input", name)}
+          style={style?.input}
           {...props}
         />
         {!addOption && showList && (
@@ -396,7 +392,7 @@ export function Text({
             onPress={() => {
               setOpen(!open);
             }}
-            style={getStyle(style, "add")}
+            style={[style?.button, style?.action, style?.actions['add']]}
           />
         )}
       </View>
@@ -411,7 +407,7 @@ export function Text({
             id={`${id}_options`}
             keyExtractor={(x) => getOptionValue(x)}
             data={filteredOptions}
-            style={getStyle(style, "options")}
+            style={style?.options}
             getItemLayout={(data, index) => ({
               length: 50,
               offset: 50 * index,
@@ -425,14 +421,14 @@ export function Text({
                   setFieldValue(item);
                   setOpen(false);
                 }}
-                style={
+                style={[
+                  ...style?.option,
                   isCurrent(item)
                     ? {
-                        ...getStyle(style.options, "option:selected"),
-                        ...getStyle(style.options, "option"),
+                        ...style?.selectedOption,
                       }
-                    : getStyle(style.options, "option")
-                }
+                    : {},
+                ]}
               />
             )}
           />
@@ -440,6 +436,6 @@ export function Text({
       </Modal>
     </TouchableWithoutFeedback>
   );
-}
+
 
 export default Text;

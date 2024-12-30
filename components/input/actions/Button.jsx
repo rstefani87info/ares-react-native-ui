@@ -1,13 +1,18 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {Pressable} from 'react-native';
-import {getStyle} from '../../../styles/index';
 import {i18n} from '../../../locales';
 
 Button.propTypes = {
-  url: PropTypes.string,
   icon:  PropTypes.any,
-  style: PropTypes.object,
+  style: PropTypes.shape({
+    wrapper: PropTypes.any,
+    wrapperOnPress: PropTypes.any,
+    icon: PropTypes.any,
+    iconOnPress: PropTypes.any,
+    text: PropTypes.any,
+    textOnPress: PropTypes.any
+  }),
   onPress: PropTypes.func,
   text: PropTypes.string,
 };
@@ -18,35 +23,36 @@ export default function Button({
   text,
 }) {
   const [isPressed, setIsPressed] = React.useState(false);
-  console.log('getStyle::::::::::::',getStyle.toString(),style);
-  const [wrapperStyle, setWrapperStyle] = React.useState(style ? (getStyle(style) ?? {}) : {});
-  const [iconStyle, setIconStyle] = React.useState(style ? (getStyle(style, 'icon') ?? {}): {});
-  const [textStyle, setTextStyle] = React.useState(style ? (getStyle(style,'text') ?? {textAlign: 'center'}) : {textAlign: 'center'});
-  // const handlePress = async () => {
-  //   console.log('pressed');
-  //   setIsPressed(true);
-  //   await onPress();
-  //   setTimeout(() => setIsPressed(false), 500);
-  // };
+  const [wrapperStyle, setWrapperStyle] = React.useState(style?.wrapper );
+  const [iconStyle, setIconStyle] = React.useState(style?.icon);
+  const [textStyle, setTextStyle] = React.useState(style?.text ?? {textAlign: 'center'});
+  const handlePress = useCallback(
+  async () => {
+    console.log('pressed');
+    setIsPressed(true);
+    await onPress();
+    setTimeout(() => setIsPressed(false), 500);
+  });
 
   useEffect(() => {
     if(isPressed){    
-      setWrapperStyle(Object.assign({},getStyle(style) ?? {},getStyle(style[':onPress']) ?? {}));
-      setIconStyle(Object.assign({}, getStyle(style,'icon') ?? {},getStyle(style[':onPress'],'icon') ?? {}));
-      setTextStyle(Object.assign({} , getStyle(style,'text') ?? {},getStyle(style[':onPress'],'text') ?? {textAlign: 'center'}));
+      setWrapperStyle({...style?.wrapper,...style?.wrapperOnPress} );
+      setIconStyle({...style?.icon,...style?.iconOnPress} );
+      setTextStyle({...style?.text,...style?.text}  ?? {textAlign: 'center'});
     }
     else {
-      setWrapperStyle(getStyle(style) ?? {});
-      setIconStyle(getStyle(style,'icon') ?? {});
-      setTextStyle(getStyle(style,'text') ?? {textAlign: 'center'});
+      setWrapperStyle(style?.wrapper);
+      setIconStyle(style?.icon);
+      setTextStyle(style?.text ?? {textAlign: 'center'});
     }
-  }, [isPressed,style,getStyle]);
+  }, [isPressed,style]);
   
   return (
     <Pressable
       style={wrapperStyle}
       onPress={
-        onPress
+        // onPress
+        handlePress
         } >
       {icon && icon instanceof Function &&  icon({style:iconStyle}) }
       {text && i18n.TranslateAsTextNode({text,style:textStyle}) } 

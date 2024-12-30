@@ -1,8 +1,6 @@
-import { Image as ImageComponent, Pressable} from "react-native";
-import { WebView } from "react-native-webview";
+import { Image as ImageComponent, View} from "react-native";
 import PropTypes from "prop-types";
-import { i18n } from "../../../locales";
-import { getStyle } from "../../../styles";
+import  Base  from "./Base";
 
 
 Image.propTypes = {
@@ -13,15 +11,17 @@ Image.propTypes = {
   regexMap: PropTypes.object,
   style: PropTypes.object,
 };
-export default function Image({ content, title, description, tags, regexMap = {}, style, ...props }) {
+export default function Image({ content, title, description, tags, regexMap = {}, embeddingRegexMap, style, ...props }) {
  
   const baseComponent = ()=>(
+    <View style={style?.wrapper ?? {}}>
         <ImageComponent
           source={content}
           useNativeControls
           resizeMode="cover"
-          style={[{width: '80%', height: '80%'},getStyle(style, "content"),getStyle(style, "wrapper"),getStyle(style, "image")]}
+          style={style?.content ?? {}}
         />
+        </View>
       );
      
       return (

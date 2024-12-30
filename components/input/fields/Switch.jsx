@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import { View } from "react-native";
 import { Text } from "./Text.jsx";
-import {getStyle} from '../../../styles';
 
 CheckBox.propTypes = {
     id: PropTypes.string.isRequired,
@@ -29,7 +28,7 @@ export function CheckBox(
       <Switch
         id={id}
         name={name}
-        style={getStyle(style, "input", name)}
+        style={style?.input}
         onChange={() => onChange}
         onValueChange={() => onValueChange}
         onPress={() => onPress && onPress instanceof Function ? onPress() : null}

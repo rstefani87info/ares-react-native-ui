@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text } from "react-native";
 
 import PropTypes from 'prop-types';
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import axios from "axios";
 import * as yup from "yup";
 import { useSelector } from "react-redux";
@@ -10,7 +10,6 @@ import { useSelector } from "react-redux";
 import { objectDescriptorDefinitions } from "./dataDescriptors";
 import Field,{ types } from "./fields/Field";
 import { aReSContext } from "../contexts/aReSContext";
-import {getStyle} from "../../styles";
 import Button from "./actions/Button";
 
 Form.propTypes = {
@@ -46,7 +45,7 @@ export default function Form ({
   headers,
   connectionSetting, 
   parametersValidationRoles,
-  graphicArrangement,
+  style,
 	mapParameters,
 	onSubmit,
   onReset,
@@ -108,7 +107,7 @@ export default function Form ({
       });
   };
 
-  const graphicArrangementMap = graphicArrangement(aReS);
+  const graphicArrangementMap = style(aReS);
 
   return (
     <nbProvider>
@@ -137,7 +136,7 @@ export function DynamicForm  ({name, config, style }) {
   };
 
   const renderField = (key, field) => {
-    const { key, label, placeholder, optionSettings, fieldComponent, helperLink, helperText, wrapper, actions } = field;
+    const { key, label, placeholder, optionSettings, fieldComponent, helperLink, helperText, wrapper, actions, style: fieldStyle } = field;
     let FieldComponent = fieldComponent || TextInput; 
 
     let options = [];
@@ -158,18 +157,21 @@ export function DynamicForm  ({name, config, style }) {
     const FieldWrapper = wrapper || View;
 
     return (
-      <FieldWrapper key={key} style={[style,getStyle(config.style,'field-wrapper', name)]}>
-        <Text style={getStyle(config.style,'field-label', name)}>{label}</Text>
-        {renderHelper(helperText || helperLink)}
+      <FieldWrapper key={key} style={{...style?.field?.wrapper , ...fieldStyle?.wrapper}}>
+        <Text style={[...style?.field?.label, ...fieldStyle.label]}>{label}</Text>
+        <View style={{flexDirection:'row',...style?.field?.helper?.wrapper, ...fieldStyle?.helper?.wrapper}}>
+        <Text style={[...style?.field?.label, ...fieldStyle.label]}>helperText</Text>
+        {helperLink && <Link style={[...style?.field?.helper?.link, ...fieldStyle?.helper?.link, ...helperLink.style]} source={helperLink.source}>{helperLink.text}</Link>}
+        </View>
         <FieldComponent  
-          style={getStyle(config.style,'field', name)}
+          style={{...style?.field?.component, ...fieldStyle?.component}}
           placeholder={placeholder}
-          // options={{optionSettings}}
+          // options={{options}}
         />
         {actions && actions.map((action, index) => (
-          <TouchableOpacity key={index} onPress={action.name} style={ getStyle(config.style,'actions', name)}>
+          <Button key={index} onPress={actions[name]} style={ {...style?.field?.action , ...fieldStyle?.action, ...action.style}}>
             <Text>{action.label}</Text>
-          </TouchableOpacity>
+          </Button>
         ))}
       </FieldWrapper>
     );
@@ -184,7 +186,7 @@ export function DynamicForm  ({name, config, style }) {
     } ).map(key => renderField(key, config.fields[key]))};
 
   return (
-    <View style={getStyle(config.style)}>
+    <View style={config.style??{}}>
       {config.wrapper ? (
         <config.wrapper>
           {showFields()}
@@ -196,13 +198,18 @@ export function DynamicForm  ({name, config, style }) {
       )}
 
       {config.actions && config.actions.map((action, index) => {
-        action.text=tr
-        if(!Array.isArray(action.style)) action.style = [action.style];
-        action.style.push(getStyle(config.style,'action', action.name));
         return(
-          <Button key={index} {...action} />
+          <Button key={index} {...action} style={{...style?.actions, ...action.style}}/>
         );
       })}
     </View>
   );
 };
+
+ 
+function getAcionStyle(style, name) {
+  return {
+    ...style?.action,
+    ...style?.actions[name],
+  };
+}

@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { i18n } from "@ares/react-native-ui/locales";
-import { getStyle } from "@ares/react-native-ui/styles";
 
 Base.propTypes = {
   baseComponent: PropTypes.func.isRequired,
@@ -11,9 +10,10 @@ Base.propTypes = {
   embeddingRegexMap: PropTypes.object,
   style: PropTypes.object,
   onPress: PropTypes.func,
-  category: PropTypes.string
+  category: PropTypes.string,
+  baseComponent: PropTypes.func
 };
-export default function Base({ content, title, description, tags, embeddingRegexMap = {}, style, category, ...props }) {
+export default function Base({ content, title, description, tags, embeddingRegexMap = {},baseComponent, style, category,onPress, ...props }) {
   if(content){
     let ret = null;
     if (typeof content === "string" || content instanceof URL) {
@@ -28,24 +28,19 @@ export default function Base({ content, title, description, tags, embeddingRegex
             <WebView
               originWhitelist={["*"]}
               source={content.uri}
-              style={getStyle(style, "wrapper")}
+              style={style?.wrapper}
+              onPress={onPress}
             />
           );
     } else {
       ret = baseComponent();
     } 
-    if(ret){
-      return (
-        <> 
-          { onPress ? <Pressable onPress={() => onPress(content)}>{ret} </Pressable> : ret}
-        </>
-      );
-    }
+    return  ret;
   }
   return (
     <i18n.TranslateAsTextNode
       text={`ares.media.${category}.not_supported`}
-      style={getStyle(style, "error")}
+      style={style?.error}
     />
   );
 }

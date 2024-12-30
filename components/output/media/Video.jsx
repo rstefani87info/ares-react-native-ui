@@ -1,7 +1,5 @@
 import { Video as VideoComponent } from "expo-av";
 import PropTypes from "prop-types";
-import { i18n } from "../../../locales";
-import { getStyle } from "../../../styles";
 import Base from "./Base";
 
 Video.propTypes = {
@@ -20,7 +18,7 @@ export default function Video({ content, title, description, tags, embeddingRege
         source={content}
         useNativeControls
         resizeMode="contain"
-        style={[getStyle(style, "content"),getStyle(style, "wrapper"),getStyle(style, "video")]}
+        style={[style?.content,style?.wrapper,style?.video]}
       />
    );
  
