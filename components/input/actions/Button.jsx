@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
-import {Pressable} from 'react-native';
+import {Pressable, View} from 'react-native';
 import {i18n} from '../../../locales';
 
 Button.propTypes = {
@@ -27,10 +27,9 @@ export default function Button({
   const [iconStyle, setIconStyle] = React.useState(style?.icon);
   const [textStyle, setTextStyle] = React.useState(style?.text ?? {textAlign: 'center'});
   const handlePress = useCallback(
-  async () => {
-    console.log('pressed');
+    () => {
     setIsPressed(true);
-    await onPress();
+    onPress();
     setTimeout(() => setIsPressed(false), 500);
   });
 
@@ -51,7 +50,6 @@ export default function Button({
     <Pressable
       style={wrapperStyle}
       onPress={
-        // onPress
         handlePress
         } >
       {icon && icon instanceof Function &&  icon({style:iconStyle}) }

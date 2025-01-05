@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import aReS from '../../../../ares';
 
-export const ARESContext = createContext();
+export const aReSContext = createContext();
 
 const initialState = {
     datasourceMap: {},
@@ -50,8 +50,8 @@ export const ARESProvider = ({ children }) => {
     }, []);
 
     return (
-        <ARESContext.Provider value={{ state, dispatch, fetchDatasources }}>
+        <aReSContext.Provider value={{ state, dispatch, fetchDatasources }}>
             {children}
-        </ARESContext.Provider>
+        </aReSContext.Provider>
     );
 };
