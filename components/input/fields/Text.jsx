@@ -12,7 +12,7 @@ import {
   Keyboard,
 } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import dateAndTime from '@ares/core/dateAndTime';
+import dateAndTime from '@ares/core/datesAndTime';
 import _, { add } from "lodash";
 import PropTypes from "prop-types";
 import { useFormContext } from "react-hook-form";
@@ -54,7 +54,7 @@ Text.propTypes = {
   ignoreCase: PropTypes.bool,
   showList: PropTypes.bool,
 };
-export function Text({
+function Text({
   id,
   name,
   type,
@@ -236,7 +236,7 @@ export function Text({
 
 
   let regex = null;
-  let additionalComponent = {render:null,trigger:null}; };
+  let additionalComponent = {render:null,trigger:null};
 
   const types={
     number:{typeAsset:{keyboardType:"numeric"},regex:/^[0-9]*$/},
@@ -273,7 +273,7 @@ export function Text({
 
       const showDatepicker = () => {
         {show && (type==='date'||type==='datetime'||type==='time') && (
-         <> <Button showIcon={require("../../../../../assets/icons/calendar.png")} onPress={pickerTrigger} />
+         <> <Button showIcon={() => <Icon name="calendar-alt"/> } onPress={pickerTrigger} />
           <DateTimePicker
             testID="dateTimePicker"
             value={getDateTime()}
@@ -436,6 +436,6 @@ export function Text({
       </Modal>
     </TouchableWithoutFeedback>
   );
-
+}
 
 export default Text;

@@ -40,7 +40,6 @@ export function translate(key, country = defaultCountry, language) {
   if(country && !language) {
     language = country.defaultLanguage;
   }
-  console.debug('translate', key, language,language?.strings);
 
   if(typeof key === 'string') 
     return getByPropertyPath(language.strings,key) ?? key;

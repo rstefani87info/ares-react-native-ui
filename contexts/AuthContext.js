@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from 'react';
 import localAvailableStorage from '../utils/localAvailableStorage';
-import {ARESContext} from './ARESContext';
+import {aReSContext} from './ARESContext';
 import aReS from '../../../../ares';
 
 const initialState = aReS.contextSettings?.auth?.initialState || {
@@ -48,10 +48,9 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({children}) => {
   const availableStorage = localAvailableStorage();
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const {state: aresState} = useContext(ARESContext);
+  const {state: aresState} = useContext(aReSContext);
 
   const login = useCallback(() => {
-    console.log('login');
     aReS.contextSettings?.auth?.login(aresState, dispatch, availableStorage), [aresState, availableStorage];
   }
 );

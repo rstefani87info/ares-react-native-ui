@@ -71,47 +71,47 @@ export const dataDescriptors = {
     return types.datetime.component(props);
   },
 
-  [regexMap.telephone.id]: (...props) => {
+  [regexMap.phoneNumber.id]: (...props) => {
     return types.tel.component(props);
   },
 
-  [regexMap.ipv4.id]: (...props) => {
+  [regexMap.ip.id]: (...props) => {
     return types.text.component(props);
   },
   [regexMap.ipv6.id]: (...props) => {
     return types.text.component(props);
   },
-  [regexMap.httpUrl.id]: (...props) => {
+  [regexMap.urls.httpUrl.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.ftpUrl.id]: (...props) => {
+  [regexMap.urls.ftpUrl.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.sshUrl.id]: (...props) => {
+  [regexMap.urls.sshUrl.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.smtpUrl.id]: (...props) => {
+  [regexMap.urls.smtpUrl.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.pop3Url.id]: (...props) => {
+  [regexMap.urls.pop3Url.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.blobUrl.id]: (...props) => {
+  [regexMap.urls.blobUrl.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.fileUrl.id]: (...props) => {
+  [regexMap.urls.fileUrl.id]: (...props) => {
     return types.url.component(props);
   },
-  [regexMap.hashMd5.id]: (...props) => {
+  [regexMap.hashes.md5.id]: (...props) => {
     return types.text.component({ maxLength: 32, ...props });
   },
-  [regexMap.crc32.id]: (...props) => {
+  [regexMap.hashes.crc32.id]: (...props) => {
     return types.text.component({ maxLength: 8, ...props });
   },
-  [regexMap.crc64.id]: (...props) => {
+  [regexMap.hashes.crc64.id]: (...props) => {
     return types.text.component({ maxLength: 16, ...props });
   },
-  [regexMap.userName.id]: (...props) => {
+  [regexMap.username.id]: (...props) => {
     return types.text.component({ maxLength: 100, ...props });
   },
   [regexMap.password.id]: (...props) => {
@@ -129,9 +129,9 @@ export const dataDescriptors = {
   [regexMap.languageCode.id]: (...props) => {
     return types.text.component(props);
   },
-  [regexMap.provinceCode.id]: (...props) => {
-    return types.text.component(props);
-  },
+  // [regexMap.provinceCode.id]: (...props) => {
+  //   return types.text.component(props);
+  // },
   [regexMap.boolean.id]: (...props) => {
     props.options = props.options ?? [true, false];
     return types.checkbox.component(props);
@@ -140,25 +140,25 @@ export const dataDescriptors = {
     props.options = props.options ?? [true, false, undefined];
     return types.checkbox.component(props);
   },
-  [regexMap.switch.id]: (...props) => {
+  [/switch/]: (...props) => {
     props.options = props.options ?? [true, false];
     return types.switch.component(props);
   },
   [regexMap.number.id]: (...props) => {
     return types.number.component(props);
   },
-  [regexMap.geographicalCoordinate.id]: (...props) => {
+  [regexMap.gpsCoordinate.id]: (...props) => {
     return types.number.component(props);
   },
-  [regexMap.geographicalCoordinates.id]: (...props) => {
+  [regexMap.gpsCoordinates.id]: (...props) => {
     return types.text.component(props);
   },
   [regexMap.hashtag.id]: (...props) => {
     return types.text.component(props);
   },
-  [regexMap.mime.id]: (...props) => {
-    return types.text.component(props);
-  },
+  // [regexMap.mime.id]: (...props) => {
+  //   return types.text.component(props);
+  // },
   [regexMap.imageFileExtension.id]: (...props) => {
     props.options =
       props.options ??
@@ -248,11 +248,8 @@ export const dataDescriptors = {
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
     return types.text.component(props);
   },
-  [regexMap.url.id]: (...props) => {
+  [regexMap.urls.url.id]: (...props) => {
     return types.url.component(props);
-  },
-  [regexMap.phone.id]: (...props) => {
-    return types.phone.component(props);
   },
   [regexMap.currencyCode.id]: (...props) => {
     return types.text.component(props);
@@ -300,11 +297,11 @@ export const dataDescriptors = {
     // props.maxLength = 15;
     return types.text.component(props);
   },
-  [regexMap.ipV6.id]: (...props) => {
+  [regexMap.ipv6.id]: (...props) => {
     // props.maxLength = 39;
     return types.text.component(props);
   },
-  [regexMap.url.id]: (...props) => {
+  [regexMap.urls.url.id]: (...props) => {
     return types.url.component(props);
   },
   [regexMap.urls.httpUrl.id]: (...props) => {
@@ -483,9 +480,9 @@ export const dataDescriptors = {
   [regexMap.languageCode.id]: (...props) => {
     return types.text.component(props);
   },
-  [regexMap.provinceCode.id]: (...props) => {
-    return types.text.component(props);
-  },
+  // [regexMap.provinceCode.id]: (...props) => {
+  //   return types.text.component(props);
+  // },
   [regexMap.gpsCoordinate.id]: (...props) => {
     return types.number.component(props);
   },
@@ -504,8 +501,8 @@ export const dataDescriptors = {
 };
 
 Field.propTypes = {
-  id: PropTypes.required.string,
-  name: PropTypes.required.string,
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
   type: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.shape({ value: PropTypes.func }),

@@ -44,7 +44,6 @@ export default function MediaList({
   
   width = width && width>0? width: Dimensions.get("window").width ;
   height = height && height>0? height: Dimensions.get("window").height-100;
-  console.debug('Content:', content);
 
  const renderItem = ( item , index) => {
   const itemStyle= style && style.item && item.id? style.items[item.id]??{} : {};
