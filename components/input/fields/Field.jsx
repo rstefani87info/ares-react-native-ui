@@ -508,9 +508,9 @@ Field.propTypes = {
     PropTypes.shape({ value: PropTypes.func }),
   ]),
   placeholder: PropTypes.string,
-  type: PropTypes.string,
+  type: PropTypes.oneOfType([PropTypes.string,  PropTypes.object]),
   style: PropTypes.object,
-  mask: PropTypes.function,
+  mask: PropTypes.func,
 };
 
 export default function Field({
@@ -523,6 +523,7 @@ export default function Field({
   mask = null,
   ...props
 }) {
+  console.log("Field",  type ,label);
   const existingType = dataDescriptors['@get'](type);
   if(!mask) mask = (node) => (<View style={style?.wrapper ?? {}}>{isEmpty(label) && <Text style={style?.label ?? {}}>{label}</Text>} {node}</View>);
   if (existingType) {
