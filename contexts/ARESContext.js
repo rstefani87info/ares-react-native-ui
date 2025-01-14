@@ -1,4 +1,6 @@
 import React, { createContext, useReducer, useEffect } from 'react';
+import * as crypto from '@ares/core/crypto';
+import DeviceInfo from 'react-native-device-info';
 import aReS from '../../../../ares';
 
 export const aReSContext = createContext();
@@ -47,6 +49,8 @@ export const ARESProvider = ({ children }) => {
 
     useEffect(() => {
         fetchDatasources();
+        const getSessionID = async () => global.sessionID = crypto.getUniqueId(await DeviceInfo.getUniqueId());
+        getSessionID();
     }, []);
 
     return (
