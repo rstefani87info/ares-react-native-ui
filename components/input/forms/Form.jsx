@@ -22,7 +22,7 @@ import {objectDescriptorDefinitions} from '@ares/core/dataDescriptors';
 import {aReSContext} from '@ares/react-native-ui/contexts/ARESContext';
 import Button from '@ares/react-native-ui/components/input/actions/Button';
 import { TextInput } from 'react-native-web';
-import {Field as FormField} from './Field';
+import Field from './Field';
 
 
 export const Form = forwardRef(  (
@@ -224,7 +224,7 @@ export const Form = forwardRef(  (
       .map(k => {
         if(!dataDescriptorMap[k].id)dataDescriptorMap[k].id=k;
         if(!dataDescriptorMap[k].name)dataDescriptorMap[k].name=k;
-        return(<FormField key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />)});
+        return(<Field key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />)});
   }, [dataDescriptorMap] );
 
   const showActions = () => {
