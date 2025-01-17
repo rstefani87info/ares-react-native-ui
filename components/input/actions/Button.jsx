@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {Pressable, View} from 'react-native';
-import {i18n} from '../../../locales';
+import TranslatedText from '../../output/TranslatedText';
 
 Button.propTypes = {
   icon:  PropTypes.any,
@@ -53,7 +53,7 @@ export default function Button({
         handlePress
         } >
       {icon && icon instanceof Function &&  icon({style:iconStyle}) }
-      {text && i18n.TranslateAsTextNode({text,style:textStyle}) } 
+      {text && <TranslatedText style={textStyle} text={text}/> } 
     </Pressable>
 
   );

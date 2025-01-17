@@ -1,23 +1,11 @@
 import PropTypes from "prop-types";
+import { createRef, forwardRef } from "react";
 import { View } from "react-native";
-import { createRef } from "react";
 import { Text } from "./Text.jsx";
 import { Button } from "../actions/Button";
 
-CheckBox.propTypes = {
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
-    style: PropTypes.object,
-    onChange: PropTypes.func,
-    onValueChange: PropTypes.func,
-    onPress : PropTypes.func,
-    ref: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-    nullable: PropTypes.bool,
-    useColorOnLabel: PropTypes.bool,
-    labelDirection: PropTypes.oneOf(['left', 'right']),
-  };
-export function CheckBox(
+
+const  CheckBox = forwardRef((
   {id,
   name,
   placeholder,
@@ -26,13 +14,12 @@ export function CheckBox(
   onValueChange,
   onPress,
   sortOptions,
-  ref,
   nullable,
   useColorOnLabel,
   labelDirection='right',
-  }
-) {
-
+  },ref
+)=> {
+  
   const [newStyle, setNewStyle] = useState({input:{ [name]: {width:10, height:10 , borderColor:'grey', borderWidth:1 , ...(style?.input ?? {}) }}});
   const [newLabelStyle, setNewLabelStyle] = useState({label:{ [`${name}_label`]: {width:10, height:10 , borderColor:'grey', borderWidth:1 , ...(style?.placeholder ?? {})}}});
     const getOptionValue = (item) => item.value;
@@ -90,6 +77,20 @@ export function CheckBox(
       multiline={false}
       />}
     </View>
-}
+});
 
- 
+CheckBox.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  style: PropTypes.object,
+  onChange: PropTypes.func,
+  onValueChange: PropTypes.func,
+  onPress : PropTypes.func,
+  ref: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  nullable: PropTypes.bool,
+  useColorOnLabel: PropTypes.bool,
+  labelDirection: PropTypes.oneOf(['left', 'right']),
+};
+
+export default CheckBox;

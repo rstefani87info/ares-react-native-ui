@@ -1,505 +1,136 @@
-import PropTypes, { node, number } from "prop-types";
-import { findPropValueByAlias } from "@ares/core/objects";
-import { isEmpty } from "@ares/core/text";
+import { View } from "react-native";
+import PropTypes, { func } from "prop-types";
+import { isEmptyString } from "@ares/core/text";
 import { regexMap } from "@ares/core/dataDescriptors";
+import Button from "../actions/Button";
+import TranslatedText from '../../output/TranslatedText';
 import { CheckBox } from "./CheckBox";
 import { Switch } from "./Switch";
 import { Text } from "./Text";
-import Button from "../actions/Button";
-import { View } from "react-native";
+import * as derived from "./derived";
+
+ 
 
 export const types = {
-  switch: { name: "switch", component: (props) => <Switch {...props} /> },
-  checkbox: { name: "checkbox", component: (props) => <CheckBox {...props} /> },
-  text: { name: "text", component: (props) => <Text {...props} /> },
-  textArea: {
-    name: "textArea",
-    component: (props) => <Text {...props} multiline />,
-  },
-  password: {
-    name: "password",
-    component: (props) => <Text secureTextEntry showList={false} {...props} />,
-  },
-  number: {
-    name: "number",
-    component: (props) => <Text type="number" showList={false} {...props} />,
-  },
-  email: {
-    name: "email",
-    component: (props) => <Text type="email" showList={false} {...props} />,
-  },
-  url: {
-    name: "url",
-    component: (props) => <Text type="url" showList={false} {...props} />,
-  },
-  tel: {
-    name: "tel",
-    component: (props) => <Text type="tel" showList={false} {...props} />,
-  },
-  date: {
-    name: "date",
-    component: (props) => <Text type="date" showList={false} {...props} />,
-  },
-  time: {
-    name: "time",
-    component: (props) => <Text type="time" showList={false} {...props} />,
-  },
-  datetime: {
-    name: "datetime",
-    component: (props) => <Text type="datetime" showList={false} {...props} />,
-  },
-  countdown: {
-    name: "countdown",
-    component: (props) => <Text type="countdown" showList={false} {...props} />,
-  },
+  Switch,CheckBox,Text,
+ ...derived
 };
+
 
 /**
  * Data descriptors
  */
 export const dataDescriptors = {
-  "@get": function (name) {
-    return findPropValueByAlias(this, name);
-  },
-  [regexMap.countdown.id]: (...props) => {
-    return types.countdown.component(props);
-  },
-  [regexMap.isodate.id]: (...props) => {
-    return types.date.component(props);
-  },
-  [regexMap.isodatetime.id]: (...props) => {
-    return types.datetime.component(props);
-  },
+  
+  [regexMap.text.id]: Text,
+  [regexMap.countdown.id]:derived.Countdown,
+  [regexMap.isodate.id]:derived.Date,
+  [regexMap.isodatetime.id]:derived.DateTime,
 
-  [regexMap.phoneNumber.id]: (...props) => {
-    return types.tel.component(props);
-  },
+  [regexMap.phoneNumber.id]:derived.Tel,
+  [regexMap.ip.id]:Text,
+  [regexMap.ipv6.id]:Text,
+  [regexMap.urls.httpUrl.id]:derived.URL,
+  [regexMap.urls.ftpUrl.id]: derived.FTPURL,
+  [regexMap.urls.sshUrl.id]:derived.SSHURL,
+  [regexMap.urls.smtpUrl.id]:derived.SMTPURL,
+  [regexMap.urls.pop3Url.id]:derived.POP3URL,
+  [regexMap.urls.blobUrl.id]:derived.BlobURL,
+  [regexMap.urls.fileUrl.id]:derived.FileURL,
+  [regexMap.hashes.md5.id]:derived.MD5,
+  [regexMap.hashes.crc32.id]:derived.CRC32,
+  [regexMap.hashes.crc64.id]:derived.CRC64,
+  [regexMap.username.id]:Text,
+  [regexMap.password.id]:derived.Password,
+  [regexMap.zipCode.id]:derived.Number,
+  [regexMap.countryCode.id]:Text,
+  [regexMap.languageCode.id]:Text,
+  // [regexMap.provinceCode.id]:Text,
+  [regexMap.boolean.id]:derived.Boolean,
+  [regexMap.nullableBoolean.id]: derived.NullableBoolean,
+  [/switch/]:Switch,
+  [regexMap.number.id]:derived.Number,
+  [regexMap.gpsCoordinate.id]:derived.GPSCoordinate,
+  [regexMap.gpsCoordinates.id]:derived.GPSCoordinates,
+  [regexMap.hashtag.id]:derived.Hashtag,
+ 
+  [regexMap.imageFileExtension.id]:derived.ImageFileExtension,
+  [regexMap.videoFileExtension.id]:derived.VideoFileExtension,
+  [regexMap.audioFileExtension.id]: derived.AudioFileExtension,
+  [regexMap.documentFileExtension.id]:derived.DocumentFileExtension,
+  [regexMap.oopFileExtension.id]:derived.OOPFileExtension,
+  [regexMap.textFileExtension.id]:derived.TextFileExtension,
+  [regexMap.programmingLanguageFileExtension.id]:derived.ProgrammingLanguageFileExtension,
+  [regexMap.dataFileExtension.id]:derived.DataFileExtension,
+  [regexMap.markupLanguageFileExtension.id]:derived.MarkupLanguageFileExtension,
+  [regexMap.personalName.id]:derived.PersonalName,
+  [regexMap.date.id]: derived.Date,
+  [regexMap.datetime.id]:derived.DateTime,
+  [regexMap.sqldatetime.id]: derived.SQLDateTime,
+  [regexMap.isodatetime.id]:derived.ISODateTime,
+  [regexMap.isotime.id]:derived.ISOTime,
+  [regexMap.datetimeoffset.id]:derived.DateTimeOffset,
+  [regexMap.time.id]:derived.Time,
+  [regexMap.commonName.id]:derived.CommonName,
+  [regexMap.phoneNumber.id]:derived.Tel,
+  [regexMap.email.id]:derived.Email,
+  [regexMap.ip.id]:derived.IP,
+  [regexMap.ipv6.id]:derived.IPv6,
+  [regexMap.urls.url.id]:derived.URL,
+  [regexMap.urls.httpUrl.id]:derived.HTTPURL,
+  [regexMap.urls.httpsUrl.id]:derived.HTTPSURL,
+  [regexMap.urls.ftpUrl.id]:derived.FTPURL,
+  [regexMap.urls.ftpsUrl.id]: derived.FTPSURL,
+  [regexMap.urls.sshUrl.id]: derived.SSHURL,
+  [regexMap.urls.smtpUrl.id]:derived.SMTPURL,
+  [regexMap.urls.pop3Url.id]: derived.POP3URL,
+  [regexMap.urls.blobUrl.id]:derived.BlobURL,
+  [regexMap.urls.fileUrl.id]: derived.FileURL,
+  [regexMap.urls.imapUrl.id]: derived.IMAPURL,
+  [regexMap.urls.ldapUrl.id]:derived.LDAPURL,
+  [regexMap.uuid.id]: derived.UUID,
+  [regexMap.hashes.sha1.id]:derived.SHA1,
+  [regexMap.hashes.sha256.id]:derived.SHA256,
+  [regexMap.hashes.sha512.id]:derived.SHA512,
+  [regexMap.hashes.sha3_224.id]: derived.SHA3_224,
+  [regexMap.hashes.sha3_256.id]: derived.SHA3_256,
+  [regexMap.hashes.sha3_384.id]: derived.SHA3_384,
+  [regexMap.hashes.sha3_512.id]: derived.SHA3_512,
+  [regexMap.hashes.blake2b_256.id]: derived.blake2b_256,
+  [regexMap.hashes.blake2b_384.id]: derived.blake2b_384,
+  [regexMap.hashes.blake2b_512.id]: derived.blake2s_512,
+  [regexMap.hashes.blake2s_256.id]: derived.blake2s_256,
+  [regexMap.hashes.blake2s_384.id]: derived.blake2s_384,
+  [regexMap.hashes.blake2s_512.id]: derived.Keccak_512,
+  [regexMap.hashes.keccak_256.id]: derived.Keccak_256,
+  [regexMap.hashes.keccak_384.id]: derived.Keccak_384,
+  [regexMap.hashes.keccak_512.id]: derived.Keccak_512,
+  [regexMap.hashes.ripemd_128.id]: derived.RIPEMD_128,
+  [regexMap.hashes.ripemd_160.id]: derived.RIPEMD_160,
+  [regexMap.hashes.ripemd_256.id]:derived.RIPEMD_256,
+  [regexMap.hashes.ripemd_320.id]:derived.RIPEMD_320,
+  [regexMap.hashes.ripemd_384.id]: derived.RIPEMD_384,
+  [regexMap.hashes.ripemd_512.id]:derived.RIPEMD_512,
+ 
+  [regexMap.hashes.crc32c.id]:derived.CRC32C,
+   
+  [regexMap.hashes.crc64ecma.id]:derived.CRC64ECMA,
+  [regexMap.hashes.crc64x.id]:derived.CRC64X,
+  [regexMap.hashes.crc64xmod.id]:derived.CRC64XMode,
+   
+  
+  [regexMap.mimeType.id]:derived.MIMEType,
+    [regexMap.identity.id]:derived.Identity,
+  [regexMap.jwt.id]:derived.JWT,
 
-  [regexMap.ip.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.ipv6.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.urls.httpUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.ftpUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.sshUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.smtpUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.pop3Url.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.blobUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.fileUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.hashes.md5.id]: (...props) => {
-    return types.text.component({ maxLength: 32, ...props });
-  },
-  [regexMap.hashes.crc32.id]: (...props) => {
-    return types.text.component({ maxLength: 8, ...props });
-  },
-  [regexMap.hashes.crc64.id]: (...props) => {
-    return types.text.component({ maxLength: 16, ...props });
-  },
-  [regexMap.username.id]: (...props) => {
-    return types.text.component({ maxLength: 100, ...props });
-  },
-  [regexMap.password.id]: (...props) => {
-    return types.password.component({ maxLength: 100, ...props });
-  },
-  [regexMap.zipCode.id]: (...props) => {
-    props.maxLength = 9;
-    return types.number.component(props);
-  },
-
-  [regexMap.countryCode.id]: (...props) => {
-    props.maxLength = 9;
-    return types.text.component(props);
-  },
-  [regexMap.languageCode.id]: (...props) => {
-    return types.text.component(props);
-  },
-  // [regexMap.provinceCode.id]: (...props) => {
-  //   return types.text.component(props);
+   // [regexMap.mime.id]: (properties) => {
+  //   return (<types.Text {...properties}/>);
   // },
-  [regexMap.boolean.id]: (...props) => {
-    props.options = props.options ?? [true, false];
-    return types.checkbox.component(props);
-  },
-  [regexMap.nullableBoolean.id]: (...props) => {
-    props.options = props.options ?? [true, false, undefined];
-    return types.checkbox.component(props);
-  },
-  [/switch/]: (...props) => {
-    props.options = props.options ?? [true, false];
-    return types.switch.component(props);
-  },
-  [regexMap.number.id]: (...props) => {
-    return types.number.component(props);
-  },
-  [regexMap.gpsCoordinate.id]: (...props) => {
-    return types.number.component(props);
-  },
-  [regexMap.gpsCoordinates.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.hashtag.id]: (...props) => {
-    return types.text.component(props);
-  },
-  // [regexMap.mime.id]: (...props) => {
-  //   return types.text.component(props);
-  // },
-  [regexMap.imageFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.imageFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    return types.text.component(props);
-  },
-  [regexMap.videoFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.videoFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.audioFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.audioFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.documentFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.documentFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.oopFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.oopFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.textFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.textFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.programmingLanguageFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.programmingLanguageFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.dataFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.dataFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.markupLanguageFileExtension.id]: (...props) => {
-    props.options =
-      props.options ??
-      regexMap.markupLanguageFileExtension.pattern
-        .toString()
-        .match(/\(([^)]+)\)/)[1]
-        ?.split("|");
-    props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return types.text.component(props);
-  },
-  [regexMap.urls.url.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.currencyCode.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.jwt.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.personalName.id]: (...props) => {
-    props.style = props.style || {};
-    props.style.input = props.style.input || {};
-    props.style.input.textTransform = "capitalize";
-    return types.text.component(props);
-  },
-  [regexMap.date.id]: (...props) => {
-    return types.date.component(props);
-  },
-  [regexMap.datetime.id]: (...props) => {
-    return types.datetime.component(props);
-  },
-  [regexMap.sqldatetime.id]: (...props) => {
-    return types.datetime.component(props);
-  },
-  [regexMap.isodatetime.id]: (...props) => {
-    return types.datetime.component(props);
-  },
-  [regexMap.isotime.id]: (...props) => {
-    return types.time.component(props);
-  },
-  [regexMap.datetimeoffset.id]: (...props) => {
-    return types.datetime.component(props);
-  },
-  [regexMap.time.id]: (...props) => {
-    return types.time.component(props);
-  },
-  [regexMap.commonName.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.phoneNumber.id]: (...props) => {
-    return types.tel.component(props);
-  },
-  [regexMap.email.id]: (...props) => {
-    return types.email.component(props);
-  },
-  [regexMap.ip.id]: (...props) => {
-    // props.maxLength = 15;
-    return types.text.component(props);
-  },
-  [regexMap.ipv6.id]: (...props) => {
-    // props.maxLength = 39;
-    return types.text.component(props);
-  },
-  [regexMap.urls.url.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.httpUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.httpsUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.ftpUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.ftpsUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.sshUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.smtpUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.pop3Url.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.blobUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.fileUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.imapUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.urls.ldapUrl.id]: (...props) => {
-    return types.url.component(props);
-  },
-  [regexMap.uuid.id]: (...props) => {
-    // props.maxLength = 36;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.md5.id]: (...props) => {
-    // props.maxLength = 32;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha1.id]: (...props) => {
-    // props.maxLength = 40;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha256.id]: (...props) => {
-    // props.maxLength = 64;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha512.id]: (...props) => {
-    // props.maxLength = 128;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha3_224.id]: (...props) => {
-    // props.maxLength = 56;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha3_256.id]: (...props) => {
-    // props.maxLength = 64;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha3_384.id]: (...props) => {
-    // props.maxLength = 96;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.sha3_512.id]: (...props) => {
-    // props.maxLength = 128;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.blake2b_256.id]: (...props) => {
-    // props.maxLength = 64;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.blake2b_384.id]: (...props) => {
-    // props.maxLength = 96;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.blake2b_512.id]: (...props) => {
-    // props.maxLength = 128;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.blake2s_256.id]: (...props) => {
-    // props.maxLength = 64;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.blake2s_384.id]: (...props) => {
-    // props.maxLength = 96;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.blake2s_512.id]: (...props) => {
-    // props.maxLength = 128;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.keccak_256.id]: (...props) => {
-    // props.maxLength = 64;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.keccak_384.id]: (...props) => {
-    // props.maxLength = 96;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.keccak_512.id]: (...props) => {
-    // props.maxLength = 128;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.ripemd_128.id]: (...props) => {
-    // props.maxLength = 32;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.ripemd_160.id]: (...props) => {
-    // props.maxLength = 40;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.ripemd_256.id]: (...props) => {
-    // props.maxLength = 64;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.ripemd_320.id]: (...props) => {
-    // props.maxLength = 80;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.ripemd_384.id]: (...props) => {
-    // props.maxLength = 96;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.ripemd_512.id]: (...props) => {
-    // props.maxLength = 128;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc32.id]: (...props) => {
-    // props.maxLength = 32;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc32c.id]: (...props) => {
-    // props.maxLength = 32;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc64.id]: (...props) => {
-    // props.maxLength = 16;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc64ecma.id]: (...props) => {
-    // props.maxLength = 16;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc64x.id]: (...props) => {
-    // props.maxLength = 16;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc64xmod.id]: (...props) => {
-    // props.maxLength = 16;
-    return types.text.component(props);
-  },
-  [regexMap.hashes.crc64ecma.id]: (...props) => {
-    // props.maxLength = 16;
-    return types.text.component(props);
-  },
-  [regexMap.username.id]: (...props) => {
-    // props.maxLength = 100;
-    return types.text.component(props);
-  },
-  [regexMap.password.id]: (...props) => {
-    // props.maxLength = 100;
-    return types.password.component(props);
-  },
-  [regexMap.zipCode.id]: (...props) => {
-    // props.maxLength = 9;
-    return types.number.component(props);
-  },
-  [regexMap.countryCode.id]: (...props) => {
-    // props.maxLength =  2;
-    return types.text.component(props);
-  },
-  [regexMap.languageCode.id]: (...props) => {
-    return types.text.component(props);
-  },
-  // [regexMap.provinceCode.id]: (...props) => {
-  //   return types.text.component(props);
-  // },
-  [regexMap.gpsCoordinate.id]: (...props) => {
-    return types.number.component(props);
-  },
-  [regexMap.gpsCoordinates.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.mimeType.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.identity.id]: (...props) => {
-    return types.text.component(props);
-  },
-  [regexMap.jwt.id]: (...props) => {
-    return types.text.component(props);
-  },
 };
-
+export function getComponent (name) {
+  const ret =  dataDescriptors[name] || types[name];
+  return ret;
+}
 Field.propTypes = {
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
@@ -507,10 +138,17 @@ Field.propTypes = {
     PropTypes.string,
     PropTypes.shape({ value: PropTypes.func }),
   ]),
-  placeholder: PropTypes.string,
-  type: PropTypes.oneOfType([PropTypes.string,  PropTypes.object]),
+  placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   style: PropTypes.object,
   mask: PropTypes.func,
+  label: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  required: PropTypes.bool,
+  helperText: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  helperLink: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  options: PropTypes.array,
+  actions: PropTypes.array,
+  exists: PropTypes.func,
+  notExists: PropTypes.func,
 };
 
 export default function Field({
@@ -520,21 +158,103 @@ export default function Field({
   style,
   placeholder,
   label,
-  mask = null,
+  mask,
+  required,
+  helperText,
+  helperLink,
+  options,
+  actions,
+  exists,
+  notExists,
   ...props
-}) {
-  console.log("Field",  type ,label);
-  const existingType = dataDescriptors['@get'](type);
-  if(!mask) mask = (node) => (<View style={style?.wrapper ?? {}}>{isEmpty(label) && <Text style={style?.label ?? {}}>{label}</Text>} {node}</View>);
-  if (existingType) {
-    return mask(label,existingType({ id, name, placeholder, style, ...props }));
-  } else if (type instanceof Function) {
-    return mask(label,type({
+},key) {
+  
+  if(!mask) mask = (node) => {console.debug("Field:::::::::::::::::::::::::::", type, node); return(
+    <View
+    key={key}
+    style={style?.wrapper}
+    >
+    {!isEmptyString(label) && <TranslatedText
+      style={style?.label } text={label}/>}
+    {helperText || helperLink ? <View
+      style={{
+        flexDirection: 'row',
+        ...(style?.helper?.wrapper ?? {}),
+      }}>
+      {helperText ? (
+      <TranslatedText
+        text={helperText} 
+        style={ style?.helper?.text ?? {} }
+        /> ): null }
+      {helperLink && (
+        <Link
+          style={ style?.helper?.linK}
+          source={helperLink?.source}>
+          {translate(helperLink?.text)}
+        </Link>
+      )}
+    </View> : null}
+     {node}
+    <View
+      style={{
+        flexDirection: 'row',
+        ...style?.actions?.wrapper,
+      }}>
+      {actions &&
+        actions.map((fieldAction, index) => (
+          <Button
+            key={index}
+            onPress={fieldAction[name]}
+            style={  
+              fieldAction?.style
+            }
+            text={fieldAction?.label}
+            icon={fieldAction?.icon}
+          />
+        ))}
+    </View>
+  </View>
+  )};
+  
+  if (type && type instanceof Function) {
+   
+    return mask(type({
       id,
       name,
       placeholder,
       style,
+      required,
+      helperText,
+      helperLink,
+      options,
+      actions,
+      exists,
+      notExists,
       ...props,
     }));
+    
+  };
+  const ExistingType = getComponent(type);
+  if (typeof type === "string" ) {
+    console.debug("Field:::::::", type, ExistingType);
+   const component = (<ExistingType   
+      id = {id}
+      name = {name}
+      type  = {type}
+      placeholder = {placeholder}
+      style= {style}
+      required= {required}
+      helperText={helperText}
+      helperLink= {helperLink}
+      options= {options}
+      actions= {actions}
+      exists= {exists}
+      notExists= {notExists} 
+      {...props} /> );
+    return mask(component);
+  }
+  else {
+    console.error("Field: No type found for ", type);
+    return null;
   }
 }

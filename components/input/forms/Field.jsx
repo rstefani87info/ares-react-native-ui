@@ -1,14 +1,14 @@
 
 import React from 'react';
-import {View} from 'react-native';
 import PropTypes from 'prop-types';
 import Controller from '../fields/Field';
 import {fuseObjects} from '@ares/core/objects';
 import useLocales from '../../../locales/useLocales';
-import TranslatedText from '../../output/TranslatedText';
+
 
 Field.propTypes={
     label: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    type: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
     placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     exists: PropTypes.bool,
     notExists: PropTypes.bool,
@@ -18,33 +18,30 @@ Field.propTypes={
       onPress: PropTypes.func,
     }),
     helperText: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-    wrapper: PropTypes.func,
+    mask: PropTypes.func,
     actions: PropTypes.object,
     style: PropTypes.object,
     required: PropTypes.bool,
     formFieldStyle: PropTypes.object,
     formActionStyle: PropTypes.object,
   };
-export function Field ({
+export default function Field ({
     label,
     type,
     placeholder,
     exists,
     notExists,
-    fieldComponent,
     helperLink,
     helperText,
-    wrapper,
+    mask,
     actions,
     style,
     required=false,
     formFieldStyle={},
     formActionStyle={},
-    
     ...props
   },key) {
     const {translate} = useLocales();
-    let FieldComponent = fieldComponent || Controller;
     let options = [];
     if (Array.isArray(exists)) {
       options = exists.map(([key, value]) => ({
@@ -88,76 +85,63 @@ export function Field ({
       }
     }
 
-    const FieldWrapper = wrapper || View;
+    
+    const newStyle={};
+    newStyle.wrapper={
+      ...(formFieldStyle?.wrapper ?? {}),
+      ...(style?.wrapper ?? {}),
+    };
+    newStyle.label=[
+      ((formFieldStyle?.label) ?? {}),
+      (style?.label ?? {}),
+    ];
+    newStyle.helper={};
+    newStyle.helper.wrapper={
+      ...(formFieldStyle?.helper?.wrapper ?? {}),
+      ...(style?.helper?.wrapper ?? {}),
+    };
+    newStyle.helper.text={
+      ...(formFieldStyle?.helper?.text ?? {}),
+      ...(style?.helper?.text ?? {})
+    };
+    newStyle.helper.link=fuseObjects(
+      fuseObjects(
+        formFieldStyle?.helper?.link,
+        style?.helper?.link,
+      ),
+      helperLink?.style,
+    );
+    newStyle.actions={};
+    newStyle.actions.wrapper={
+      ...fuseObjects(
+        formFieldStyle?.actions?.wrapper,
+        style?.actions?.wrapper,
+      ),
+    };
+    actions?.forEach((fieldAction, index) => {
+      fieldAction.style = fuseObjects(
+          fuseObjects(formFieldStyle?.action, style?.action),
+          fieldAction?.style,
+        );
+      }
+    );
+        
 
     return (
-      <FieldWrapper
+      <Controller
+        mask={mask}
+        options={options}
+        label={label}
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        style={newStyle}
+        helperLink={helperLink}
+        helperText={helperText}
+        actions={actions}
+        exists={exists}
+        notExists={notExists}
         key={key}
-        style={{
-          ...(formFieldStyle?.wrapper ?? {}),
-          ...(style?.wrapper ?? {}),
-        }}
-        {...props}>
-        <TranslatedText
-          style={[
-            ((formFieldStyle?.label) ?? {}),
-           (style?.label ?? {}),
-          ]} text={label}/>
-        {helperText || helperLink ? <View
-          style={{
-            ...(formFieldStyle?.helper?.wrapper ?? {}),
-            ...(style?.helper?.wrapper ?? {}),
-            flexDirection: 'row',
-          }}>
-          {helperText ? <TranslatedText
-            style={[
-              ...(formFieldStyle?.helper?.text ?? {}),
-              ...(style?.helper?.text ?? {}),
-            ]}>
-            helperText
-          </TranslatedText>: null}
-          {helperLink && (
-            <Link
-              style={fuseObjects(
-                fuseObjects(
-                  formFieldStyle?.helper?.link,
-                  style?.helper?.link,
-                ),
-                helperLink?.style,
-              )}
-              source={helperLink?.source}>
-              {translate(helperLink?.text)}
-            </Link>
-          )}
-        </View> : null}
-        <FieldComponent
-          type={type}
-          style={fuseObjects(formFieldStyle?.component, style?.component)}
-          placeholder={translate(placeholder)}
-          options={{options}}
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            ...fuseObjects(
-              formFieldStyle?.actions?.wrapper,
-              style?.actions?.wrapper,
-            ),
-          }}>
-          {actions &&
-            actions.map((fieldAction, index) => (
-              <Button
-                key={index}
-                onPress={fieldAction[name]}
-                style={fuseObjects(
-                  fuseObjects(formFieldStyle?.action, style?.action),
-                  fieldAction?.style,
-                )}
-                text={fieldAction?.label}
-                icon={fieldAction?.icon}
-              />
-            ))}
-        </View>
-      </FieldWrapper>
-    );
+        {...props}
+        />)
   };

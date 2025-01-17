@@ -1,37 +1,43 @@
-import '@formatjs/intl-pluralrules/polyfill';
-import i18n from 'i18next';
+import i18next from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
-import * as RNLocalize from 'react-native-localize';
-import {Text} from 'react-native';
-import languages,{  defaultLang } from './languages';
+;
+import { defaultLang } from './languages';
 
-// ----------------------------------------------------------------------
-i18n.use(initReactI18next).init({
-  resources:  Object.values(languages).map(({strings, code}) => ({[code]: strings})).reduce((acc, val) => ({...acc, ...val}), {}),
-  lng: "en", // Lingua di default
-  fallbackLng: "en", // Lingua di fallback
-  interpolation: {
-    escapeValue: false // React già esegue l'escape
-  }
-});
+import {translate, getCurrentLanguage, languages} from './i18n'
+import countries from './countries';
+
+
+// export function initLocales(strings={}, defaultLanguage= null, fallbackLanguage= 'en') {
+//   const systemCurrentLanguage = getCurrentLanguage();
+//   strings = {...systemCurrentLanguage.strings, ...strings}  ;
+//   console.debug ('initLocales',{A:systemCurrentLanguage, B:strings});
+//   i18next.use(initReactI18next).init({
+//   resources:  strings,
+//   lng: defaultLanguage ?? systemCurrentLanguage?.code, 
+//   fallbackLng: fallbackLanguage, 
+//   interpolation: {
+//     escapeValue: false  
+//   },
+// });
+// }
+
 export default function useLocales() {
-  const { i18n, t } = useTranslation();
-  const locales = RNLocalize.getLocales();
-  const currentLang = (locales[0]?.languageTag || defaultLang) || 'en';
-
-  const handleChangeLanguage = (lang) => {
-    i18n.changeLanguage(lang);
-  };
+  // if(!global.isI18NInitialized) {
+  //   initLocales();
+  //   global.isI18NInitialized = true;
+  // }
+  const currentLang = getCurrentLanguage();
+  const country = countries[currentLang.region] || countries.US;
 
   return {
-    onChangeLang: handleChangeLanguage,
+    // changeLanguage: i18n.changeLanguage,
     translate: (text, options) => { 
-      console.debug("currentLang", currentLang); 
+      const language = getCurrentLanguage().strings;
       return typeof text === 'string' ? 
-      t(text, options) : 
-      (typeof text === 'object' ? (text[currentLang] ?? text[currentLang.split('-')[0]] ??text[defaultLang]) : '');
+      translate( text, country, {strings:language}  ) : 
+      (typeof text === 'object' ? (text[language.code] ?? text[language.region] ?? text[language.languageCode] ??text[defaultLang]) : '');
     },
-    currentLang,
-    allLangs: languages,
+    currentLanguage: currentLang,
+    allLanguages: languages,
   };
 }

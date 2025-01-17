@@ -1,30 +1,23 @@
-import PropTypes from "prop-types";
+import { forwardRef } from "react";
 import { View } from "react-native";
-import { Text } from "./Text.jsx";
+import PropTypes from "prop-types";
+import TranslatedText from "../../output/TranslatedText";
 
-CheckBox.propTypes = {
-    id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
-    style: PropTypes.object,
-    labelDirection: PropTypes.oneOf(['left', 'right']),
-  };
-export function CheckBox(
-  {id,
+
+const CheckBox = forwardRef(
+ ( {id,
   name,
   placeholder,
   style,
   labelDirection = 'right',
-  ref,
+  
   onChange,
   onValueChange,
   onPress,
  ...props
-  }
-) {
-  return (
+  },ref ) =>  (
     <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-    {labelDirection === 'left' && <Text>{placeholder}</Text>}
+    {labelDirection === 'left' && <TranslatedText text={placeholder}/>}
       <Switch
         id={id}
         name={name}
@@ -34,10 +27,16 @@ export function CheckBox(
         onPress={() => onPress && onPress instanceof Function ? onPress() : null}
         {...props}
       />
-      {labelDirection === 'right' && <Text>{placeholder}</Text>}
+      {labelDirection === 'right' && <TranslatedText text={placeholder}/>}
 
       </View>
-  );
-}
-
+  ));
  
+
+  CheckBox.propTypes = {
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    style: PropTypes.object,
+    labelDirection: PropTypes.oneOf(['left', 'right']),
+  };

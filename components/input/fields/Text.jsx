@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useImperativeHandle,
+  forwardRef,
 } from "react";
 import {
   TextInput,
@@ -17,49 +18,15 @@ import _, { add } from "lodash";
 import PropTypes from "prop-types";
 import { useFormContext } from "react-hook-form";
 import Button from "../actions/Button";
-import * as i18n from '../../../locales/i18n';
+import useLocales from "../../../locales/useLocales";
 
-Text.defaultProps = {
-  type: "text",
-  placeholder: "",
-  options: [],
-  style: {},
-  addOption: true,
-  ignoreCase: true,
-  showList: true,
-};
 
-Text.propTypes = {
-  id: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  placeholder: PropTypes.string,
-  type: PropTypes.string,
-  style: PropTypes.object,
-  onReset: PropTypes.func,
-  onChange: PropTypes.func,
-  onKeyPress: PropTypes.func,
-  onFocus: PropTypes.func,
-  onBlur: PropTypes.func,
-  onPress: PropTypes.func,
-  onPressIn: PropTypes.func,
-  onPressOut: PropTypes.func,
-  onLongPress: PropTypes.func,
-  onLayout: PropTypes.func,
-  options: PropTypes.arrayOf(PropTypes.any),
-  getOptionValue: PropTypes.func,
-  getOptionText: PropTypes.func,
-  addOption: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
-  sortOptions: PropTypes.func,
-  ref: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  ignoreCase: PropTypes.bool,
-  showList: PropTypes.bool,
-};
-function Text({
+const Text = forwardRef(( {
   id,
   name,
-  type,
+  type="text",
   placeholder,
-  options,
+  options=[],
   style,
   onChange,
   onChangeValue,
@@ -73,18 +40,17 @@ function Text({
   onLayout,
   getOptionValue,
   getOptionText,
-  addOption,
+  addOption=true,
   sortOptions,
-  ref,
-  ignoreCase,
-  showList,
+  ignoreCase=true,
+  showList=true,
   ...props
-}) {
+},ref) => {
   if (!getOptionValue) getOptionValue = (item) => item;
   if (!getOptionText) getOptionText = (item) => item;
   if (!sortOptions) sortOptions = (a, b) => 0;
-
-
+console.log("TEXT------------------------------------", props);
+  const { translate } = useLocales();
   let typeAsset = {
     keyboardType: "default",
   };
@@ -251,9 +217,10 @@ function Text({
   };
   
   const onTimingType =()=>{
+      const {currentLanguage} = useLocales();
       props.editable = false;
       const [show, setShow] = useState(false);
-      const dateFormat = i18n.translate(type);
+      const dateFormat = currentLanguage[type];
       const is24Hour = dateFormat.includes("HH");
       const getDateTime = () => {
         const stringDate = getTextInputValue();
@@ -295,7 +262,7 @@ function Text({
           id={id}
           ref={reference}
           {...typeAsset}
-          placeholder={placeholder}
+          placeholder={translate(placeholder)}
           onChange={() => {
             if (onChange)
               onChange({ targetRef: reference, value: getTextInputValue() });
@@ -436,6 +403,31 @@ function Text({
       </Modal>
     </TouchableWithoutFeedback>
   );
-}
+});
 
+Text.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  type: PropTypes.string,
+  style: PropTypes.object,
+  onReset: PropTypes.func,
+  onChange: PropTypes.func,
+  onKeyPress: PropTypes.func,
+  onFocus: PropTypes.func,
+  onBlur: PropTypes.func,
+  onPress: PropTypes.func,
+  onPressIn: PropTypes.func,
+  onPressOut: PropTypes.func,
+  onLongPress: PropTypes.func,
+  onLayout: PropTypes.func,
+  options: PropTypes.arrayOf(PropTypes.any),
+  getOptionValue: PropTypes.func,
+  getOptionText: PropTypes.func,
+  addOption: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
+  sortOptions: PropTypes.func,
+  ref: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  ignoreCase: PropTypes.bool,
+  showList: PropTypes.bool,
+};
 export default Text;

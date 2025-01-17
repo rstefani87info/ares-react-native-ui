@@ -2,7 +2,6 @@ import React, {
   useContext,
   useState,
   forwardRef,
-  useEffect,
   useImperativeHandle,
   memo,
   useCallback,
@@ -11,7 +10,7 @@ import {View, Text} from 'react-native';
 
 import PropTypes from 'prop-types';
 import {useForm, FormProvider} from 'react-hook-form';
-import {yupResolver} from '@hookform/resolvers/yup';
+// import {yupResolver} from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
 import {fuseObjects} from '@ares/core/objects';
@@ -21,7 +20,6 @@ import {objectDescriptorDefinitions} from '@ares/core/dataDescriptors';
 
 import {aReSContext} from '@ares/react-native-ui/contexts/ARESContext';
 import Button from '@ares/react-native-ui/components/input/actions/Button';
-import { TextInput } from 'react-native-web';
 import Field from './Field';
 
 
@@ -70,7 +68,6 @@ export const Form = forwardRef(  (
       
     ret.request =  {body:ret.data};
     ret.dataDescriptorMap = parametersValidationRoles(ret.request, aReS);
-    console.debug(`aReS.datasourceMap[${connectionSetting}]`, aReS.datasourceMap[connectionSetting]);
     ret.mapper = aReS.datasourceMap[connectionSetting][query];
     return ret;
   };
@@ -212,7 +209,6 @@ export const Form = forwardRef(  (
   const formActionStyle = style?.actionSetting ?? {};
 
   const showFields = useCallback(() => {
-    console.debug('dataDescriptorMap', dataDescriptorMap);
     return Object.keys(dataDescriptorMap??{})
       .sort((k1, k2) => {
         let pos1 = dataDescriptorMap[k1].positionIndex;
@@ -222,8 +218,8 @@ export const Form = forwardRef(  (
         return pos1 - pos2;
       })
       .map(k => {
-        if(!dataDescriptorMap[k].id)dataDescriptorMap[k].id=k;
-        if(!dataDescriptorMap[k].name)dataDescriptorMap[k].name=k;
+        if(!dataDescriptorMap[k].id) dataDescriptorMap[k].id=k;
+        if(!dataDescriptorMap[k].name) dataDescriptorMap[k].name=k;
         return(<Field key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />)});
   }, [dataDescriptorMap] );
 

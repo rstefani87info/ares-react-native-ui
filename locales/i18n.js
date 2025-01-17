@@ -1,22 +1,24 @@
-import { Text } from 'react-native';
-import PropTypes from 'prop-types';
 import * as Localize from 'react-native-localize';
 import {getByPropertyPath} from '@ares/core/scripts'
 import {filterLike} from '@ares/core/text';
 import countries from './countries';
 import languages from './languages';
+import customStrings from '../../../../locales/languages';
 
 
-const defaultCountry = countries.US;
+const defaultCountry = countries[global.countryCode || 'US'];
+if(defaultCountry && defaultCountry.defaultLanguage && !global.currentLanguage) global.currentLanguage = languages[Localize.getLocales()[0].languageTag] ?? defaultCountry.defaultLanguage;
 
 export function getCurrentLanguage(){
-  const locales =  global.countryCode || Localize.getLocales();
 
-  const language = locales[0].languageCode;  
-  const region = locales[0].countryCode; 
-  const languageTag = locales[0].languageTag; 
+  const locale =  global.currentLanguage ;
+  const language = locale.languageCode ;  
+  const region = locale.region || locale.countryCode || global.countryCode || defaultCountry.code ; 
+  const languageTag = locale.languageTag || locale.code; 
 
-  let ret = languages[languageTag] || languages[language] || (countries[region]?.defaultLanguage) ||getCurrentCountry().defaultLanguage
+  let ret = languages[languageTag] || languages[language] || (countries[region]?.defaultLanguage) || defaultCountry.defaultLanguage
+ 
+  ret.strings = {...ret.strings, ...customStrings[languageTag]};
   return ret;
 };
 
@@ -46,17 +48,4 @@ export function translate(key, country = defaultCountry, language) {
   else if(key instanceof Function) {
     return key(language.strings,language,country);
   }
-} 
-
-TranslateAsTextNode.propTypes = {
-  style: PropTypes.any,
-  key: PropTypes.oneOfType([PropTypes.string, PropTypes.func]) ,
-  country: PropTypes.object,
-  language: PropTypes.string,
-};
-export function TranslateAsTextNode({text, country, language, ...props}) {
-  if (!country ) {
-    country = global.countryCode? countries[global.countryCode]: defaultCountry;
-  }
-  return <Text {...props}>{translate(text, country)}</Text>;
 } 

@@ -9,14 +9,14 @@ const languages = {
     code: 'en-US',
     region: 'US',
     languageCode: 'en',
-    strings: Object.assign({},en_us,custom.enUS ),
+    strings:  en_us,
   },
   itIT: {
     label: 'Italiano (Italia)',
     code: 'it-IT',
     region: 'IT',
     languageCode: 'it',
-    strings: Object.assign({},it_it,custom.itIT ),
+    strings: it_it,
   },
 };
 
