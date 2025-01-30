@@ -10,8 +10,8 @@ Field.propTypes={
     label: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     type: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
     placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-    exists: PropTypes.bool,
-    notExists: PropTypes.bool,
+    exists: PropTypes.array,
+    notExists: PropTypes.array,
     fieldComponent: PropTypes.func,
     helperLink: PropTypes.shape({
       text: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
@@ -87,6 +87,7 @@ export default function Field ({
 
     
     const newStyle={};
+    newStyle.component = fuseObjects(formFieldStyle?.component, style?.component);
     newStyle.wrapper={
       ...(formFieldStyle?.wrapper ?? {}),
       ...(style?.wrapper ?? {}),
@@ -126,7 +127,6 @@ export default function Field ({
       }
     );
         
-
     return (
       <Controller
         mask={mask}

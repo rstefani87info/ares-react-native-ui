@@ -42,10 +42,9 @@ export function translate(key, country = defaultCountry, language) {
   if(country && !language) {
     language = country.defaultLanguage;
   }
-
-  if(typeof key === 'string') 
+  if(typeof key === 'string') {
     return getByPropertyPath(language.strings,key) ?? key;
-  else if(key instanceof Function) {
+ } else if(key instanceof Function) {
     return key(language.strings,language,country);
   }
 } 

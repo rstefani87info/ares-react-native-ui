@@ -5,17 +5,20 @@ import React, {
   useMemo,
   useImperativeHandle,
   forwardRef,
+  useCallback,
 } from "react";
 import {
-  TextInput,
   FlatList,
   TouchableWithoutFeedback,
   Keyboard,
+  View,
 } from "react-native";
+import Modal from 'react-native-modal';
+import { TextInput } from "react-native-gesture-handler";
+import _ from "lodash";
+import PropTypes from "prop-types";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dateAndTime from '@ares/core/datesAndTime';
-import _, { add } from "lodash";
-import PropTypes from "prop-types";
 import { useFormContext } from "react-hook-form";
 import Button from "../actions/Button";
 import useLocales from "../../../locales/useLocales";
@@ -49,15 +52,41 @@ const Text = forwardRef(( {
   if (!getOptionValue) getOptionValue = (item) => item;
   if (!getOptionText) getOptionText = (item) => item;
   if (!sortOptions) sortOptions = (a, b) => 0;
-console.log("TEXT------------------------------------", props);
   const { translate } = useLocales();
   let typeAsset = {
     keyboardType: "default",
   };
 
-  const [optionList, setOptionList] = useState(options.sort(sortOptions));
+  const [optionList, setOptionList] = useState(options.sort(sortOptions) ?? []);
   const [open, setOpen] = useState(false);
-  const [debounceTimeout, setDebounceTimeout] = useState(null);
+
+
+  const getItemByValue = (value) => {
+    const filtered = optionList.filter((x) => value === getOptionValue(x));
+    return filtered?.length === 1 ? filtered[0]: null;
+  };
+
+  const setFieldValue = (item) => {
+    if (item && typeof item === "string") {
+      item = getItemByText(item);
+      if (!item && addOption) {
+        item = addOption(item);
+        setOptionList([...optionList, item].sort(sortOptions));
+      }
+    }
+    if (item) {
+      if (formContext.setValue)formContext.setValue(name, getOptionValue(item));
+      setTextInputValue(getOptionText(item));
+    }
+  };
+  const getTextInputValue = () => {
+    const currentValue =
+      reference?.current?.value || reference?.current?._lastNativeText;
+    return currentValue;
+  };
+  const setTextInputValue = (value) => {
+    reference?.current?.setNativeProps({ text: value });
+  };
 
   React.useEffect(() => {
     if (true === addOption && addOption instanceof Function)
@@ -73,18 +102,18 @@ console.log("TEXT------------------------------------", props);
         ? comparer(`${a}`.toLowerCase(), `${b}`.toLowerCase())
         : comparer(`${b}`, `${a}`);
 
-  const { register, setValue, getValues, watch } = useFormContext();
-  const initialValue = getValues(name) || "";
+        const formContext = useFormContext();
+  const initialValue = formContext.getValues ? formContext.getValues(name) : "";
   setTextInputValue(getItemByValue(initialValue));
-  const watchedValue = watch(name);
+  const watchedValue = formContext.watch ? formContext.watch(name) :null;
   useEffect(() => {
     if (watchedValue !== getTextInputValue()) {
       setTextInputValue(getItemByValue(watchedValue));
     }
   }, [watchedValue]);
   React.useEffect(() => {
-    register(name);
-  }, [register, name]);
+    if(formContext.register) formContext.register(name);
+  }, [formContext, name]);
 
   const reference = ref ?? createRef();
 
@@ -96,14 +125,11 @@ console.log("TEXT------------------------------------", props);
   const handleInputChange = useCallback(
     _.debounce((text) => {
       if (onChangeValue) onChangeValue({ targetRef: reference, value: text });
-      setOpen(true);
+      if(optionList.length > 0) setOpen(true);
     }, 300),
     [reference, onChangeValue]
   );
 
-  const filteredOptions = useMemo(() => {
-    return filterData();
-  }, [optionList]);
 
   const filterData = () =>
     optionList.filter((item) => {
@@ -113,6 +139,11 @@ console.log("TEXT------------------------------------", props);
         ? itemString.toLowerCase().includes(currentValue.toLowerCase())
         : itemString.includes(currentValue);
     }) ?? [];
+
+  const filteredOptions = useMemo(() => {
+    return filterData();
+  }, [optionList]);
+
 
   const isCurrent = (item) => {
     const itemString = getOptionText(item);
@@ -136,35 +167,8 @@ console.log("TEXT------------------------------------", props);
     else if (!filtered || filtered.length === 0) return null;
   };
 
-  const getItemByValue = (value) => {
-    const filtered = optionList.filter((x) => value === getOptionValue(x));
-    if (filtered && filtered.length === 1) return filtered[0];
-    else if (!filtered || filtered.length === 0) return null;
-  };
-
-  const setFieldValue = (item) => {
-    if (item && typeof item === "string") {
-      item = getItemByText(item);
-      if (!item && addOption) {
-        item = addOption(item);
-        setOptionList([...optionList, item].sort(sortOptions));
-      }
-    }
-    if (item) {
-      setValue(name, getOptionValue(item));
-      setTextInputValue(getOptionText(item));
-    }
-  };
-
-  const getTextInputValue = () => {
-    const currentValue =
-      reference?.current.value || reference?.current._lastNativeText;
-    return currentValue;
-  };
-
-  const setTextInputValue = (value) => {
-    reference?.current.setNativeProps({ text: value });
-  };
+  
+ 
 
   const getCurrentItemIndex = () => {
     const currentValue = getTextInputValue();
@@ -252,14 +256,13 @@ console.log("TEXT------------------------------------", props);
       }
       additionalComponent = showDatepicker();
   }
-
-  
-
+    
+  typeAsset = type in types ?types[type].typeAsset :typeAsset;
   return (
     <TouchableWithoutFeedback onPress={handleOutsideClick}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+      <View><View style={{ flexDirection: "row", flexWrap: "wrap" }}>
         <TextInput
-          id={id}
+          key={`${id}-input${new Date().getTime()}`}
           ref={reference}
           {...typeAsset}
           placeholder={translate(placeholder)}
@@ -349,7 +352,7 @@ console.log("TEXT------------------------------------", props);
                 height: e.nativeEvent.height,
               });
           }}
-          style={style?.input}
+          style={style?.input ?? {minWidth: '100%', backgroundColor:'WHITE', borderColor:'GREY', borderWidth: 1}}
           {...props}
         />
         {!addOption && showList && (
@@ -365,9 +368,11 @@ console.log("TEXT------------------------------------", props);
       </View>
 
       <Modal
-        visible={open}
-        animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
+        isVisible={open}
+        // transparent={true}
+        animationIn="slideInUp" 
+        animationOut="slideOutDown"
+        onBackdropPress={() => setIsModalVisible(false)}
       >
         <View style={{ flex: 1, padding: 20 }}>
           <FlatList
@@ -401,6 +406,7 @@ console.log("TEXT------------------------------------", props);
           />
         </View>
       </Modal>
+      </View>
     </TouchableWithoutFeedback>
   );
 });

@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View , Text as RNText} from "react-native";
 import PropTypes, { func } from "prop-types";
 import { isEmptyString } from "@ares/core/text";
 import { regexMap } from "@ares/core/dataDescriptors";
@@ -6,8 +6,9 @@ import Button from "../actions/Button";
 import TranslatedText from '../../output/TranslatedText';
 import { CheckBox } from "./CheckBox";
 import { Switch } from "./Switch";
-import { Text } from "./Text";
+import  Text from "./Text";
 import * as derived from "./derived";
+import { min, rest } from "lodash";
 
  
 
@@ -48,7 +49,7 @@ export const dataDescriptors = {
   // [regexMap.provinceCode.id]:Text,
   [regexMap.boolean.id]:derived.Boolean,
   [regexMap.nullableBoolean.id]: derived.NullableBoolean,
-  [/switch/]:Switch,
+  switch:Switch,
   [regexMap.number.id]:derived.Number,
   [regexMap.gpsCoordinate.id]:derived.GPSCoordinate,
   [regexMap.gpsCoordinates.id]:derived.GPSCoordinates,
@@ -167,13 +168,12 @@ export default function Field({
   exists,
   notExists,
   ...props
-},key) {
+}, key) {
   
-  if(!mask) mask = (node) => {console.debug("Field:::::::::::::::::::::::::::", type, node); return(
+  if(!mask) mask = ({node, ...rest}) => (
     <View
     key={key}
-    style={style?.wrapper}
-    >
+    style={style?.wrapper ?? {minWidth: '100%'}}>
     {!isEmptyString(label) && <TranslatedText
       style={style?.label } text={label}/>}
     {helperText || helperLink ? <View
@@ -214,11 +214,10 @@ export default function Field({
         ))}
     </View>
   </View>
-  )};
+  );
   
   if (type && type instanceof Function) {
-   
-    return mask(type({
+    return mask({node:type({
       id,
       name,
       placeholder,
@@ -231,18 +230,17 @@ export default function Field({
       exists,
       notExists,
       ...props,
-    }));
+    })});
     
-  };
-  const ExistingType = getComponent(type);
-  if (typeof type === "string" ) {
-    console.debug("Field:::::::", type, ExistingType);
+  }
+ else if (typeof type === "string" ) {
+    const ExistingType = getComponent(type);
    const component = (<ExistingType   
       id = {id}
       name = {name}
       type  = {type}
       placeholder = {placeholder}
-      style= {style}
+      style= {style?.component}
       required= {required}
       helperText={helperText}
       helperLink= {helperLink}
@@ -251,7 +249,7 @@ export default function Field({
       exists= {exists}
       notExists= {notExists} 
       {...props} /> );
-    return mask(component);
+    return mask({node:component});
   }
   else {
     console.error("Field: No type found for ", type);

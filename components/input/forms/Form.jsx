@@ -5,6 +5,7 @@ import React, {
   useImperativeHandle,
   memo,
   useCallback,
+  useEffect,
 } from 'react';
 import {View, Text} from 'react-native';
 
@@ -20,7 +21,33 @@ import {objectDescriptorDefinitions} from '@ares/core/dataDescriptors';
 
 import {aReSContext} from '@ares/react-native-ui/contexts/ARESContext';
 import Button from '@ares/react-native-ui/components/input/actions/Button';
+import TranslatedText from '@ares/react-native-ui/components/output/TranslatedText';
 import Field from './Field';
+
+function initData(newData, aReS) {
+  const ret = {};
+      switch (typeof newData) {
+        case 'string':
+          ret.data = JSON.parse(newData);
+          break;
+        case 'array':
+          ret.data = convertArrayToObject(newData);
+          break;
+        case 'function':
+          ret.data =  newData();
+          break;
+        case 'object':
+          ret.data = newData;
+          break;
+        default:
+          ret.data = {};
+      };
+      
+    ret.request = {body:ret.data, session:{id:'default'} };
+    ret.mapper = aReS?.datasourceMap[connectionSetting][query];
+    return ret;
+}
+
 
 
 export const Form = forwardRef(  (
@@ -45,44 +72,26 @@ export const Form = forwardRef(  (
   },
   ref,
 ) => {
+  const initializedData = initData(defaultData, aReS);
   const {state} = useContext(aReSContext);
- const aReS = state.aReS;
-  const initData = (newData, validate) => {
-    const ret = {};
-      switch (typeof newData) {
-        case 'string':
-          ret.data = JSON.parse(newData);
-          break;
-        case 'array':
-          ret.data = convertArrayToObject(newData);
-          break;
-        case 'function':
-          ret.data =  newData();
-          break;
-        case 'object':
-          ret.data = newData;
-          break;
-        default:
-          ret.data = {};
-      };
-      
-    ret.request =  {body:ret.data};
-    ret.dataDescriptorMap = parametersValidationRoles(ret.request, aReS);
-    ret.mapper = aReS.datasourceMap[connectionSetting][query];
-    return ret;
-  };
-  const initialStates = initData(defaultData, false);
-
-
-
-  const [request, setRequest] = useState(initialStates.request);
-  const [data, setDataNatively] = useState(initialStates.data);
-  const [dataDescriptorMap, setDataDescriptorMap] = useState(
-    initialStates.dataDescriptorMap);
-  const [mapper, setMapper] = useState(initialStates.mapper);
+  const aReS = state.aReS;
+  const [request, setRequest] = useState(initializedData.request);
+  const [data, setDataNatively] = useState(initializedData.data);
+  const [mapper, setMapper] = useState(initializedData.mapper);
+  const [dataDescriptorMap, setDataDescriptorMap] = useState({});
   const [validationSchema, setValidationSchema] = useState(
     yup.object().shape({ })
   );
+   
+ useEffect(() => {
+    const loadDataDescriptorMap = async () => {
+      setDataDescriptorMap( await parametersValidationRoles(request, aReS));
+    };
+    loadDataDescriptorMap();
+   
+  }, [parametersValidationRoles, aReS, request]);
+  
+
   const createRequest = dataToSend => {
     let preparedRequest = aReS.createRequest({
       body: mapParameters ? mapParameters(dataToSend) : dataToSend,
@@ -141,8 +150,6 @@ export const Form = forwardRef(  (
     setValidationSchema( yup.object().shape(roles));
   }, []);
 
-
-
   const setData = useCallback(
     async (newData, validate) => {
       const ret =  initData(newData, validate);
@@ -162,11 +169,7 @@ export const Form = forwardRef(  (
     [ reset, trigger,setDataNatively,  setRequest, createRequest, getYupRoles, setDataDescriptorMap, parametersValidationRoles, setMapper]
   );
 
-  
-   
-   
-
-  const handleSubmitCallback = useCallback(async dataToSend => {
+  const handleSubmitCallback = async dataToSend => {
     let preparedRequest = createRequest(dataToSend);
     setRequest(preparedRequest);
     const isJWTSensible = mapper?.isJWTSensible && getToken;
@@ -181,17 +184,16 @@ export const Form = forwardRef(  (
         ...getToken,
       };
     }
-    let response = mapper.execute(preparedRequest);
+    let response = await mapper.execute(preparedRequest);
     if (mapResults) {
       response = mapResults(response);
     }
     if (onSubmit) {
       onSubmit(dataToSend);
     }
-  });
+  };
 
-
-  const submit =  {handler: handleSubmitCallback, positionIndex: 100};
+  const submit =  { text: 'ares.submit'};
   actions = {
     ...actions,
   };
@@ -199,6 +201,16 @@ export const Form = forwardRef(  (
   if(!actions.submit) {
     actions.submit = submit;
   }
+  if(!actions.submit.handler) {
+    actions.submit.handler = handleSubmitCallback;
+  }
+  actions.submit.positionIndex = 1000;
+
+  Object.keys(actions).forEach(ak=>{
+    actions[ak] = useCallback(actions[ak]);
+  });
+  
+
 
   const wrapperStyle = style?.wrapper;
   const titleStyle = style?.title ?? {fontSize: 20, fontWeight: 'bold', marginBottom: 10};
@@ -206,49 +218,10 @@ export const Form = forwardRef(  (
     style?.description ?? {fontSize: 16, marginBottom: 10},
   ];
   const formFieldStyle = style?.fieldSetting ?? {};
-  const formActionStyle = style?.actionSetting ?? {};
-
-  const showFields = useCallback(() => {
-    return Object.keys(dataDescriptorMap??{})
-      .sort((k1, k2) => {
-        let pos1 = dataDescriptorMap[k1].positionIndex;
-        if (!pos1) pos1 = 0;
-        let pos2 = dataDescriptorMap[k2].positionIndex;
-        if (!pos2) pos2 = 0;
-        return pos1 - pos2;
-      })
-      .map(k => {
-        if(!dataDescriptorMap[k].id) dataDescriptorMap[k].id=k;
-        if(!dataDescriptorMap[k].name) dataDescriptorMap[k].name=k;
-        return(<Field key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />)});
-  }, [dataDescriptorMap] );
-
-  const showActions = () => {
-    return Object.keys(actions)
-      .sort((k1, k2) => {
-        let pos1 = actions[k1].positionIndex;
-        if (!pos1) pos1 = 0;
-        let pos2 = actions[k2].positionIndex;
-        if (!pos2) pos2 = 0;
-        return pos1 - pos2;
-      })
-      .map((k, i) => (
-        <Button
-          key={k}
-          icon={actions[k].icon}
-          text={actions[k].text}
-          onPress={actions[k].handler}
-          style={fuseObjects(
-            fuseObjects(
-              style?.action?.button,
-              style?.action ? style?.action[k] ?? {} : {},
-            ),
-            actions[k].style,
-          )}
-        />
-      ));
-  };
-
+  const formActionStyle = /*style?.actionSetting ?? */{
+    wrapper:{backgroundColor: 'silver', paddingLeft: 10, paddingRight: 10 , paddingTop: 5, paddingBottom: 5, borderRadius: 10, margin: 10, borderColor: 'gray', borderWidth: 1, alignItems: 'center', justifyContent: 'center'},
+text:{fontSize: 16, fontWeight: 'bold', color: 'black'}}; 
+ 
   useImperativeHandle(ref, () => ({
     data,
     setData,
@@ -257,10 +230,10 @@ export const Form = forwardRef(  (
   return (
     <View ref={ref} style={wrapperStyle ?? {flexDirection: 'row', flexWrap: 'wrap'}}>
       <FormProvider>
-        <Text style={titleStyle}>{title}</Text>
-        <Text style={descriptionStyle}>{description}</Text>
-          {showFields()}
-          {showActions()}
+        <TranslatedText style={titleStyle} text={title}/>
+        <TranslatedText style={descriptionStyle} text={description}/>
+          <ShowFields dataDescriptorMap={dataDescriptorMap} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} />
+          <ShowActions actions={actions} formActionStyle={formActionStyle} />
       </FormProvider>
     </View>
   );
@@ -289,3 +262,41 @@ Form.propTypes = {
   actions: PropTypes.object,
 };
 export default memo(Form);
+
+
+function ShowFields({dataDescriptorMap, formFieldStyle, formActionStyle}){
+  return Object.keys(dataDescriptorMap??{})
+    .sort((k1, k2) => {
+      return (dataDescriptorMap[k1]?.positionIndex ?? 0) - (dataDescriptorMap[k2]?.positionIndex ?? 0);
+    })
+    .map(k => {
+      if(!dataDescriptorMap[k].id) dataDescriptorMap[k].id=k;
+      if(!dataDescriptorMap[k].name) dataDescriptorMap[k].name=k;
+      return(<Field key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />)});
+}
+
+function ShowActions({actions, style, formActionStyle}){
+  return Object.keys(actions)
+    .sort((k1, k2) => {
+      const pos1 = actions[k1]?.positionIndex ?? 0;
+      const pos2 = actions[k2]?.positionIndex ?? 0;
+      return pos1 - pos2;
+    })
+    .map((k, i) => {
+      const actSyle = fuseObjects(fuseObjects(
+        fuseObjects(
+          style?.action?.button,
+          style?.action ? style?.action[k] ?? {} : {},
+        ),
+        actions[k].style,
+      ) , formActionStyle);
+      console.debug('actions', k, actions[k], actSyle);
+     return  <Button
+        key={k}
+        icon={actions[k].icon}
+        text={actions[k].text}
+        onPress={actions[k].handler}
+        style={actSyle}
+      />
+    });
+}

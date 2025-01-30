@@ -11,23 +11,26 @@ Map.propTypes = {
   }),
   radius: PropTypes.number.isRequired,
   places: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.any.isRequired,
     latitude: PropTypes.number.isRequired,
     longitude: PropTypes.number.isRequired,
-    title: PropTypes.string.isRequired,
+    title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    address: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     description: PropTypes.string.isRequired,
     categories: PropTypes.arrayOf(PropTypes.string),
     media: PropTypes.array,
     color: PropTypes.string,
-    marker: PropTypes.shape({
-        
-    })
+    onPress: PropTypes.func,
+    icon: PropTypes.any,
   })).isRequired,
+  style: PropTypes.object,
 };
-const Map = ({ center, radius,centerMarker, places,...props }) => {
+export default function Map ({ center, radius,centerMarker, places, style, ...props }) {
   return (
     <View style={styles.container}>
       <MapView
-        style={styles.map}
+        customMapStyle={style?.customMapTheme || customMapStyle}
+        style={style?.wrapper || styles.map}
         initialRegion={{
           latitude: center.latitude,
           longitude: center.longitude,
@@ -35,7 +38,16 @@ const Map = ({ center, radius,centerMarker, places,...props }) => {
           longitudeDelta: 0.05,
         }}
       >
-        {center.marker && <Marker coordinate={center} ></Marker>}
+        {center.marker && <Marker key="_center" coordinate={center} ></Marker>}
+        {places.map((place) => (
+          <Marker
+            key={place.id}
+            coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+            title={translate(place.title)}
+            description={translate(place.description)}
+            onPress={() => place.onPress(place)}
+          />
+        ))}
         <Circle 
           center={center} 
           radius={radius} 
@@ -45,7 +57,7 @@ const Map = ({ center, radius,centerMarker, places,...props }) => {
       </MapView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -56,4 +68,82 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Map;
+const customMapStyle = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#FFFFFFFF"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#212121"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#2c2c2c"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#3e3e3e"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#0195D9FF"
+      }
+    ]
+  }
+];
