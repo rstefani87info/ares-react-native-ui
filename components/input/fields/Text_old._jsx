@@ -1,0 +1,481 @@
+import React, {
+  createRef,
+  useState,
+  useEffect,
+  useMemo,
+  useImperativeHandle,
+  forwardRef,
+  useCallback,
+} from "react";
+import {
+  FlatList,
+  TouchableWithoutFeedback,
+  Keyboard,
+  View,
+} from "react-native";
+import Modal from 'react-native-modal';
+import { TextInput } from "react-native-gesture-handler";
+import _ from "lodash";
+import PropTypes from "prop-types";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import dateAndTime from '@ares/core/datesAndTime';
+import { useFormContext } from "react-hook-form";
+import Button from "@ares/react-native-ui/components/input/actions/Button";
+import useLocales from "@ares/react-native-ui/locales/useLocales";
+
+
+const comparer = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+
+
+const Text = forwardRef(({
+  id,
+  name,
+  type = "text",
+  placeholder,
+  style,
+  onChangeValue,
+  onKeyPress,
+  onFocus,
+  onBlur,
+  onPress,
+  onPressIn,
+  onPressOut,
+  onLongPress,
+  onLayout,
+  options = [],
+  getOptionValue,
+  getOptionText,
+  addOption = true,
+  sortOptions,
+  ignoreCase,
+  showList,
+  showList = true,
+  ignoreCase = true,
+  multiple = false,
+  ...props
+}, ref) => {
+  return <TextWrapper
+    ref={ref}
+    id={id}
+    name={name}
+    type={type}
+    placeholder={placeholder}
+    style={style}
+    onChangeValue={onChangeValue}
+    onKeyPress={onKeyPress}
+    onFocus={onFocus}
+    onBlur={onBlur}
+    onPress={onPress}
+    onPressIn={onPressIn}
+    onPressOut={onPressOut}
+    onLongPress={onLongPress}
+    onLayout={onLayout}
+    options={options}
+    getOptionValue={getOptionValue}
+    getOptionText={getOptionText}
+    addOption={addOption}
+    sortOptions={sortOptions}
+    ignoreCase={ignoreCase}
+    showList={showList}
+    {...props}
+  />
+
+});
+
+const TextBox = forwardRef(({
+  id,
+  name,
+  type = "text",
+  placeholder,
+  style,
+  onChangeValue,
+  onKeyPress,
+  onFocus,
+  onBlur,
+  onPress,
+  onPressIn,
+  onPressOut,
+  onLongPress,
+  onLayout,
+  addOption = true,
+  sortOptions,
+  ignoreCase,
+  showList,
+  showList = true,
+  ignoreCase = true,
+  multiple = false,
+  ...props
+}, ref) => {
+  const { translate } = useLocales();
+  let typeAsset = {
+    keyboardType: "default",
+  };
+const formContext = useFormContext();
+ const reference = ref ?? createRef();
+ 
+ const getTextInputValue = useCallback(() => {
+    const currentValue =
+      reference?.current?.value || reference?.current?._lastNativeText;
+    return currentValue;
+  }, [reference]);
+  const setTextInputValue = useCallback((value, formValue) => {
+    reference?.current?.setNativeProps({ text: value });
+  }, [reference]);
+
+  const initialValue = formContext.getValues ? formContext.getValues(name) : "";
+  setTextInputValue(getItemByValue(initialValue));
+  const watchedValue = formContext.watch ? formContext.watch(name) : null;
+  useEffect(() => {
+    if (watchedValue !==  getTextInputValue()) {
+      setTextInputValue(getItemByValue(watchedValue));
+    }
+  }, [watchedValue]);
+
+  React.useEffect(() => {
+    if (formContext.register) formContext.register(name);
+  }, [formContext, name]);
+
+  const handleInputChange = useCallback(
+    _.debounce((text) => {
+      if (onChangeValue) onChangeValue({ targetRef: reference, value: text });
+      if (optionList.length > 0) setOpen(true);
+    }, 300),
+    [reference, onChangeValue]
+  );
+
+  useImperativeHandle(ref, () => ({
+    setValue: setTextInputValue,
+    getValue:  getTextInputValue,
+  }));
+
+
+  let regex = null;
+  let additionalComponent = { render: null, trigger: null };
+
+  
+
+  typeAsset = type in types ? types[type].typeAsset : typeAsset;
+  return (
+    <>
+      <TextInput
+        key={`${id}-input${new Date().getTime()}`}
+        ref={reference}
+        {...typeAsset}
+        placeholder={translate(placeholder)}
+        onChangeText={handleInputChange}
+        onBlur={() => {
+          setOpen(false);
+          if (onBlur)
+            onBlur({
+              targetRef: reference,
+              value:  getTextInputValue(),
+              target: e.nativeEvent.target,
+            });
+
+          const item = getCurrentItem();
+          if (!item && !addOption) {
+            setTextInputValue("");
+          }
+        }}
+        onFocus={(e) => {
+          if (!addOption) setOpen(true);
+          if (onFocus)
+            onFocus({
+              targetRef: reference,
+              value:  getTextInputValue(),
+              target: e.nativeEvent.target,
+            });
+        }}
+        onKeyPress={(e) => {
+          const text =  inputRef?.current?.getValue();
+          if (regex && !regex.test(e.nativeEvent.key)) {
+            setTextInputValue(text.replace(e.nativeEvent.key, ""));
+            return;
+          }
+          setFieldValue(text);
+          handleInputChange(text);
+          if (onKeyPress)
+            onKeyPress({
+              targetRef: reference,
+              value: text,
+              key: e.nativeEvent.key,
+            });
+        }}
+        onPress={() => {
+          if (!addOption) setOpen(showList && !open);
+          if (onPress)
+            onPress({ targetRef: reference, value:  getTextInputValue() });
+        }}
+        onPressIn={(e) => {
+          if (onPressIn)
+            onPressIn({
+              targetRef: reference,
+              value:  getTextInputValue(),
+              locationX: e.nativeEvent.locationX,
+              locationY: e.nativeEvent.locationY,
+            });
+        }}
+        onPressOut={(e) => {
+          if (onPressOut)
+            onPressOut({
+              targetRef: reference,
+              value:  getTextInputValue(),
+              locationX: e.nativeEvent.locationX,
+              locationY: e.nativeEvent.locationY,
+            });
+        }}
+        onLongPress={(e) => {
+          if (onLongPress)
+            onLongPress({
+              targetRef: reference,
+              value:  getTextInputValue(),
+              locationX: e.nativeEvent.locationX,
+              locationY: e.nativeEvent.locationY,
+            });
+        }}
+        onLayout={(e) => {
+          if (onLayout)
+            onLayout({
+              targetRef: reference,
+              value:  getTextInputValue(),
+              locationX: e.nativeEvent.x,
+              locationY: e.nativeEvent.y,
+              width: e.nativeEvent.width,
+              height: e.nativeEvent.height,
+            });
+        }}
+        style={style?.input ?? { minWidth: '100%', backgroundColor: 'WHITE', borderColor: 'GREY', borderWidth: 1 }}
+        {...props}
+      />
+      {additionalComponent}
+    </>
+
+  );
+});
+
+Text.propTypes = {
+  id: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  type: PropTypes.string,
+  style: PropTypes.object,
+  onReset: PropTypes.func,
+  // onChange: PropTypes.func,
+  onKeyPress: PropTypes.func,
+  onFocus: PropTypes.func,
+  onBlur: PropTypes.func,
+  onPress: PropTypes.func,
+  onPressIn: PropTypes.func,
+  onPressOut: PropTypes.func,
+  onLongPress: PropTypes.func,
+  onLayout: PropTypes.func,
+  options: PropTypes.arrayOf(PropTypes.any),
+  getOptionValue: PropTypes.func,
+  getOptionText: PropTypes.func,
+  addOption: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
+  sortOptions: PropTypes.func,
+  ignoreCase: PropTypes.bool,
+  showList: PropTypes.bool,
+};
+export default Text;
+
+
+const SingleTextWrapper = forwardRef(({
+  style,
+  options = [],
+  getOptionValue,
+  getOptionText,
+  addOption = true,
+  sortOptions,
+  ignoreCase,
+  showList,
+  ...props
+}, ref) => {
+  if (!getOptionValue) getOptionValue = (item) => item;
+  if (!getOptionText) getOptionText = (item) => item;
+  if (!sortOptions) sortOptions = (a, b) => 0;
+  const [open, setOpen] = useState(false);
+  const [optionList, setOptionList] = useState(options);
+  const [controlledValue, setControlledValue] = useState(value);
+
+  const inputRef = useRef(null);
+
+  const getItemByValue = useCallback((value) => {
+    const filtered = optionList.filter((x) => value === getOptionValue(x));
+    return filtered?.length === 1 ? filtered[0] : null;
+  }, [getOptionValue, optionList]);
+
+  const getItemByText = useCallback((text) => {
+    const filtered = optionList.filter((x) => isEqual(text, getOptionText(x)));
+    if (filtered && filtered.length === 1) return filtered[0];
+    else if (!filtered || filtered.length === 0) return null;
+  }, [getOptionText, optionList]);
+
+  const filterData = useCallback(() =>
+    optionList.reduce((acc, item) => {
+      const itemString = `${getOptionText(item)}`;
+      const currentValue = `${inputRef?.current?.getValue()}`;
+      if (ignoreCase
+        ? itemString.toLowerCase().includes(currentValue.toLowerCase())
+        : itemString.includes(currentValue)
+      ) {
+        acc.push(item);
+      }
+      return acc;
+    }, []), [optionList, ignoreCase, inputRef]);
+
+  const filteredOptions = useMemo(() => {
+    return filterData();
+  }, [optionList]);
+
+  const isCurrent = useCallback((item) => {
+    const itemString = getOptionText(item);
+    const currentValue = inputRef?.current?.getValue();
+    return isEqual(itemString, currentValue);
+  }, [isEqual, inputRef]);
+
+  const getCurrentItem = useCallback(() => {
+    const currentValue =  inputRef?.current?.getValue();
+    return getItemByText(currentValue);
+  }, [inputRef, getItemByText]);
+
+  const getCurrentItemIndex = useCallback( () => {
+    const currentValue =  inputRef?.current?.getValue();
+    let index = -1;
+    optionList.forEach((x, i) => {
+      const equals = index === -1 && isEqual(currentValue, getOptionText(x));
+      index = equals ? i : index;
+      return equals;
+    });
+    return index;
+  }, [optionList]);
+
+  const getNext = () => {
+    const index = getCurrentItemIndex();
+    if (index === -1) throw new Error("No current item");
+    let nextIndex = index + 1;
+    if (nextIndex >= optionList.length) nextIndex = 0;
+    const nextItem = optionList[nextIndex];
+    return nextItem;
+  };
+
+  const getPrevious = () => {
+    const index = getCurrentItemIndex();
+    if (index === -1) throw new Error("No current item");
+    let nextIndex = index - 1;
+    if (nextIndex < 0) nextIndex = optionList.length - 1;
+    const nextItem = optionList[nextIndex];
+    return nextItem;
+  };
+
+  const handleOutsideClick = () => {
+    setOpen(false);
+  };
+
+  if (!sortOptions)
+    sortOptions = (a, b) =>
+      ignoreCase
+        ? comparer(`${a}`.toLowerCase(), `${b}`.toLowerCase())
+        : comparer(`${b}`, `${a}`);
+
+  
+
+  const setFieldValue = useCallback(
+    (item) => {
+      if (item && typeof item === "string") {
+        item = getItemByText(item);
+        if (!item && addOption) {
+          item = addOption(item);
+          setOptionList([...optionList, item].sort(sortOptions));
+        }
+      }
+      if (item) {
+        inputRef.current?.setValue(getOptionText(item),getOptionValue(item));
+      }
+    },[
+      addOption,
+      getOptionText,
+      getOptionValue,
+      optionList,
+      sortOptions]
+  );
+
+  const getFieldValue = useCallback(() => {
+    return inputRef.current?.getValue();
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    isCurrent,
+    setValue: setFieldValue,
+    getValue: getFieldValue,
+    getItemByText,
+    getItemByValue,
+    getCurrentItem,
+    getCurrentItemIndex,
+    getNext,
+    open,
+    setOpen,
+    optionList,
+    setOptionList,
+  }));
+
+  return (
+    <TouchableWithoutFeedback onPress={handleOutsideClick}>
+      <View ref={ref}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+          <Text {...props} value={controlledValue} />
+        </View>
+        <Modal
+          isVisible={open}
+          // transparent={true}
+          animationIn="slideInUp"
+          animationOut="slideOutDown"
+          onBackdropPress={() => setIsModalVisible(false)}
+        >
+          <View style={{ flex: 1, padding: 20 }}>
+            <FlatList
+              id={`${id}_options`}
+              keyExtractor={(x) => getOptionValue(x)}
+              data={filteredOptions}
+              style={style?.options}
+              getItemLayout={(data, index) => ({
+                length: 50,
+                offset: 50 * index,
+                index,
+              })}
+              renderItem={({ item }) => (
+                <Button
+                  id={`${id}_option[${getOptionValue}]`}
+                  text={getOptionText(item)}
+                  onPress={() => {
+                    setFieldValue(item);
+                    setOpen(false);
+                  }}
+                  style={[
+                    ...style?.option,
+                    isCurrent(item)
+                      ? {
+                        ...style?.selectedOption,
+                      }
+                      : {},
+                  ]}
+                />
+              )}
+            />
+          </View>
+        </Modal>
+      </View>
+    </TouchableWithoutFeedback>
+  );
+});
+SingleTextWrapper.propTypes = {
+  style: PropTypes.object,
+  showList: PropTypes.bool,
+  options: PropTypes.arrayOf(PropTypes.any),
+  getOptionValue: PropTypes.func,
+  getOptionText: PropTypes.func,
+  addOption: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
+  sortOptions: PropTypes.func,
+  ignoreCase: PropTypes.bool,
+};

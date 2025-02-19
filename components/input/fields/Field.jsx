@@ -6,7 +6,7 @@ import Button from "../actions/Button";
 import TranslatedText from '../../output/TranslatedText';
 import { CheckBox } from "./CheckBox";
 import { Switch } from "./Switch";
-import  Text from "./Text";
+import  Text from "@ares/react-native-ui/components/input/fields/Text";
 import * as derived from "./derived";
 import { min, rest } from "lodash";
 
@@ -148,8 +148,8 @@ Field.propTypes = {
   helperLink: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   options: PropTypes.array,
   actions: PropTypes.array,
-  exists: PropTypes.func,
-  notExists: PropTypes.func,
+  exists: PropTypes.array,
+  notExists: PropTypes.array,
 };
 
 export default function Field({
@@ -165,8 +165,7 @@ export default function Field({
   helperLink,
   options,
   actions,
-  exists,
-  notExists,
+
   ...props
 }, key) {
   
@@ -227,8 +226,6 @@ export default function Field({
       helperLink,
       options,
       actions,
-      exists,
-      notExists,
       ...props,
     })});
     
@@ -246,8 +243,6 @@ export default function Field({
       helperLink= {helperLink}
       options= {options}
       actions= {actions}
-      exists= {exists}
-      notExists= {notExists} 
       {...props} /> );
     return mask({node:component});
   }

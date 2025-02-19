@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { createRef, forwardRef } from "react";
 import { View } from "react-native";
-import { Text } from "./Text.jsx";
+import { Text } from "@ares/react-native-ui/components/input/fields/Text";
 import { Button } from "../actions/Button";
 
 

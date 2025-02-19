@@ -24,6 +24,7 @@ Field.propTypes={
     required: PropTypes.bool,
     formFieldStyle: PropTypes.object,
     formActionStyle: PropTypes.object,
+    options: PropTypes.array,
   };
 export default function Field ({
     label,
@@ -39,51 +40,46 @@ export default function Field ({
     required=false,
     formFieldStyle={},
     formActionStyle={},
+    options,
     ...props
   },key) {
-    const {translate} = useLocales();
-    let options = [];
-    if (Array.isArray(exists)) {
-      options = exists.map(([key, value]) => ({
-        value: key,
-        text: value,
-      }));
-      } else if (typeof exists === 'function') {
-        options = exists();
-      } else if (typeof exists === 'object') {
-        options = Object.entries(exists).map(([key, value]) => ({
-          value: key,
-          text: value,
-        }));
-      } else if (typeof exists === 'string') {
-        options = exists
-          .split(/,+\|\s{2,}/)
-          .map(option => ({value: option, text: option}));
-      }
+    // if (Array.isArray(exists)) {
+    //   options = exists.map((value) => ({
+    //     value: value.id,
+    //     text: value.name,
+    //   }));
+    //   } else if (typeof exists === 'function') {
+    //     options = exists();
+    //   } else if (typeof exists === 'object') {
+    //     options = Object.entries(exists).map(([key, value]) => ({
+    //       value: key,
+    //       text: value,
+    //     }));
+    //   } else if (typeof exists === 'string') {
+    //     options = exists
+    //       .split(/,+\|\s{2,}/)
+    //       .map(option => ({value: option, text: option}));
+    //   }
 
-    if (notExists) {
-      if (notExists.dataKeyForStateCache) {
-        options = useSelector(
-          state => state.cache[notExists.dataKeyForStateCache],
-        );
-      } else if (typeof notExists === 'function') {
-        options = exists();
-      } else if (Array.isArray(notExists)) {
-        options = notExists.map(([key, value]) => ({
-          value: key,
-          text: value,
-        }));
-      } else if (typeof notExists === 'object') {
-        options = Object.entries(notExists).map(([key, value]) => ({
-          value: key,
-          text: value,
-        }));
-      } else if (typeof exists === 'string') {
-        options = exists
-          .split(/,+\|\s{2,}/)
-          .map(option => ({value: option, text: option}));
-      }
-    }
+    // if (notExists) {
+    //   if (typeof notExists === 'function') {
+    //     options = notExists();
+    //   } else if (Array.isArray(notExists)) {
+    //     options = notExists.map(([key, value]) => ({
+    //       value: key,
+    //       text: value,
+    //     }));
+    //   } else if (typeof notExists === 'object') {
+    //     options = Object.entries(notExists).map(([key, value]) => ({
+    //       value: key,
+    //       text: value,
+    //     }));
+    //   } else if (typeof exists === 'string') {
+    //     options = exists
+    //       .split(/,+\|\s{2,}/)
+    //       .map(option => ({value: option, text: option}));
+    //   }
+    // }
 
     
     const newStyle={};

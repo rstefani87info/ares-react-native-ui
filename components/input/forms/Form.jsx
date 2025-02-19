@@ -88,7 +88,6 @@ export const Form = forwardRef(  (
       setDataDescriptorMap( await parametersValidationRoles(request, aReS));
     };
     loadDataDescriptorMap();
-   
   }, [parametersValidationRoles, aReS, request]);
   
 
@@ -290,7 +289,6 @@ function ShowActions({actions, style, formActionStyle}){
         ),
         actions[k].style,
       ) , formActionStyle);
-      console.debug('actions', k, actions[k], actSyle);
      return  <Button
         key={k}
         icon={actions[k].icon}
