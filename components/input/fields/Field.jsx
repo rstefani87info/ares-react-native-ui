@@ -243,6 +243,7 @@ export default function Field({
       helperLink= {helperLink}
       options= {options}
       actions= {actions}
+      showOptionList = {props.showOptionList} // Assicurati di passare showOptionList invece di showList
       {...props} /> );
     return mask({node:component});
   }

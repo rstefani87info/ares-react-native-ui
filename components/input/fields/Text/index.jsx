@@ -19,11 +19,9 @@ import {
 import ReactNativeModal from 'react-native-modal';
 import {TextInput} from 'react-native-gesture-handler';
 import {useFormContext} from 'react-hook-form';
-import _, {add, set} from 'lodash';
 import PropTypes from 'prop-types';
 
 import Button from '@ares/react-native-ui/components/input/actions/Button';
-import useLocales from '@ares/react-native-ui/locales/useLocales';
 import {isPrimitive} from '@ares/core/scripts';
 import {fuseObjects} from '@ares/core/objects';
 import Options from './Options';
@@ -60,7 +58,9 @@ const Text = forwardRef(
       ...props
     },
     ref,
-  ) => {
+  ) => {    
+    getOptionValue = getOptionValue ?? (o => (isPrimitive(o) ? o : o.value));
+    getOptionText = getOptionText ?? (o => (isPrimitive(o) ? o : o.text));
     sortOptions = sortOptions ?? ((a, b) => getOptionText(a)?.localeCompare(getOptionText(b)) ?? -1);
     const [realValues, setRealValues] = useState(['']);
     const [values, setValues] = useState(['']);
@@ -69,8 +69,7 @@ const Text = forwardRef(
     const [optionList, setOptionList] = useState(options);
     const [focusedIndex, setFocusedIndex] = useState(null);
 
-    getOptionValue = getOptionValue ?? (o => (isPrimitive(o) ? o : o.value));
-    getOptionText = getOptionText ?? (o => (isPrimitive(o) ? o : o.text));
+
     getOptionIcon =
       getOptionIcon ??
       (o => (isPrimitive(o) ? null : (o.icon ?? o.image ?? null)));
@@ -94,18 +93,24 @@ const Text = forwardRef(
       }
     }, [values]);
 
+    // Aggiungi questo useEffect per aggiornare optionList quando cambiano le options
+    useEffect(() => {
+      setOptionList(options);
+    }, [options]);
+
     const filterOptions = useCallback(
-      option =>{
-        const oText=getValueForComparison(getOptionText(option));
+      option => {
+        const oText = getValueForComparison(getOptionText(option));
         return values.filter(
           v => { 
-            v=getValueForComparison(v ?? '') ;
+            v = getValueForComparison(v ?? '') ;
             return !v || 
             oText?.includes(v) &&
             (!distinct ||
               oText !== v);
-        }).length>0},
-      [values],
+        }).length > 0;
+      },
+      [values, getOptionText, getValueForComparison, distinct],
     );
 
     const getOptionByText = useCallback(
@@ -160,11 +165,22 @@ const Text = forwardRef(
         const newRealValues = [...realValues];
         newValues[focusedIndex] = getOptionText(option);
         newRealValues[focusedIndex] = getOptionValue(option);
+
+        const mergedValues = newValues.map((text, i) => ({
+          value: newRealValues[i],
+          text: text,
+        }));
         setValues(newValues);
         setRealValues(newRealValues);
+        
+        // Notify parent component about the value change
+        if (onChangeValue) {
+          onChangeValue(multiple ? mergedValues : mergedValues[0]);
+        }
+        
         onClose();
       },
-      [values, focusedIndex, onClose],
+      [values, focusedIndex, onClose, onChangeValue, multiple, realValues],
     )
     return (
       <View style={style.input}>
@@ -233,7 +249,18 @@ const Text = forwardRef(
                     }
                   }
                   onChangeText={text => {
-                    setValues(values.map((v, i) => (i === index ? text : v)));
+                    const newValues = values.map((v, i) => (i === index ? text : v));
+                    setValues(newValues);
+                    
+                    // Update real values and notify parent component
+                    const newRealValues = [...realValues];
+                    newRealValues[index] = text;
+                    setRealValues(newRealValues);
+                    
+                    if (onChangeValue) {
+                      onChangeValue(multiple ? newRealValues : newRealValues[0]);
+                    }
+                    
                     if (text.length > 0) {
                       setOptionsVisible(true);
                     }
@@ -259,7 +286,18 @@ const Text = forwardRef(
                   )}
                   onPress={() => {
                     const newValues = values.filter((v, i) => i !== index);
+                    const newRealValues = realValues.filter((v, i) => i !== index);
+                    
                     setValues(newValues.length > 0 ? newValues : ['']);
+                    setRealValues(newRealValues.length > 0 ? newRealValues : ['']);
+                    
+                    if (onChangeValue) {
+                      const mergedValues = newValues.map((text, i) => ({
+                        value: newRealValues[i],
+                        text: text,
+                      }));
+                      onChangeValue(multiple ? mergedValues : mergedValues[0]);
+                    }
                   }}
                 />
               </View>
@@ -331,6 +369,6 @@ Text.propTypes = {
   addOption: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
   sortOptions: PropTypes.func,
   ignoreCase: PropTypes.bool,
-  showList: PropTypes.bool,
+  showOptionList: PropTypes.bool, // Cambiato da showList a showOptionList
 };
 export default Text;
