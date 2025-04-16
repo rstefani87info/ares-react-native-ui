@@ -37,6 +37,7 @@ const Text = forwardRef(
       placeholder,
       style,
       onChangeValue,
+      onChangeOption,
       onKeyPress,
       onFocus,
       onBlur,
@@ -170,14 +171,17 @@ const Text = forwardRef(
           value: newRealValues[i],
           text: text,
         }));
-        setValues(newValues);
-        setRealValues(newRealValues);
+        
         
         // Notify parent component about the value change
         if (onChangeValue) {
           onChangeValue(multiple ? mergedValues : mergedValues[0]);
         }
-        
+        if(onChangeOption &&  (!values[focusedIndex] || values[focusedIndex] !== getOptionValue(option))) {
+          onChangeOption(oldOptions, option);
+        }
+        setValues(newValues);
+        setRealValues(newRealValues);
         onClose();
       },
       [values, focusedIndex, onClose, onChangeValue, multiple, realValues],
