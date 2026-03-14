@@ -9,22 +9,41 @@ import React, {
   useCallback,
 } from 'react';
 import {
-  FlatList,
-  TouchableWithoutFeedback,
-  Keyboard,
   View,
-  Text as Label,
 } from 'react-native';
 
 import ReactNativeModal from 'react-native-modal';
 import {TextInput} from 'react-native-gesture-handler';
-import {useFormContext} from 'react-hook-form';
 import PropTypes from 'prop-types';
 
 import Button from '@ares/react-native-ui/components/input/actions/Button';
 import {isPrimitive} from '@ares/core/scripts';
 import {fuseObjects} from '@ares/core/objects';
 import Options from './Options';
+
+
+function normalizeOptions(options) {
+  if (typeof options === 'string') {
+    try {
+      options = JSON.parse(options);
+    } catch {
+      options = [];
+    }
+  }
+
+  if (!options) return [];
+  if (Array.isArray(options)) return options;
+
+  if (typeof options?.[Symbol.iterator] === 'function') {
+    return Array.from(options);
+  }
+
+  if (typeof options === 'object') {
+    return Object.keys(options).map(k => ({value: k, text: options[k]}));
+  }
+
+  return [];
+}
 
 const Text = forwardRef(
   (
@@ -67,22 +86,25 @@ const Text = forwardRef(
     const [values, setValues] = useState(['']);
     const [optionsVisible, setOptionsVisible] = useState(false);
     const [errors, setErrors] = useState([null]);
-    const [optionList, setOptionList] = useState(options);
+    const [optionsOverride, setOptionsOverride] = useState(null);
+    const optionList = useMemo(() => {
+      return normalizeOptions(optionsOverride ?? options);
+    }, [options, optionsOverride]);
+
     const [focusedIndex, setFocusedIndex] = useState(null);
-
-
-    getOptionIcon =
+ 
+      getOptionIcon =
       getOptionIcon ??
       (o => (isPrimitive(o) ? null : (o.icon ?? o.image ?? null)));
-    addOption =
+      addOption =
       addOption === true
-        ? {
-            byText: text => ({text, value: text}),
-            byValue: value => ({value, text: value}),
+      ? {
+        byText: text => ({text, value: text}),
+        byValue: value => ({value, text: value}),
           }
         : addOption;
     const getValueForComparison = value => {
-      return ignoreCase && value.toLowerCase ? value.toLowerCase() : value;
+      return ignoreCase && (value??'').toLowerCase ? (value??'').toLowerCase() : value;
     };
 
     const textRef = useRef([]);
@@ -93,51 +115,59 @@ const Text = forwardRef(
         textRef.current.push(createRef());
       }
     }, [values]);
+    
+      
+      const filterOptions = useCallback(
+        option => {
+          const oText = getValueForComparison(getOptionText(option));
+          return values.filter(
+            v => { 
+              v = getValueForComparison(v ?? '') ;
+              return !v || 
+              oText?.includes(v) &&
+              (!distinct ||
+                oText !== v);
+              }).length > 0;
+            },
+            [values, getOptionText, getValueForComparison, distinct],
+          );
 
-    // Aggiungi questo useEffect per aggiornare optionList quando cambiano le options
-    useEffect(() => {
-      setOptionList(options);
-    }, [options]);
-
-    const filterOptions = useCallback(
-      option => {
-        const oText = getValueForComparison(getOptionText(option));
-        return values.filter(
-          v => { 
-            v = getValueForComparison(v ?? '') ;
-            return !v || 
-            oText?.includes(v) &&
-            (!distinct ||
-              oText !== v);
-        }).length > 0;
-      },
-      [values, getOptionText, getValueForComparison, distinct],
-    );
-
-    const getOptionByText = useCallback(
-      text => {
-        return optionList.find(
-          o => getValueForComparison(o.text) == getValueForComparison(text),
-        );
+          const getOptionByText = useCallback(
+            text => {
+              return optionList.find(o => (
+                getValueForComparison(getOptionText(o)) ==
+                getValueForComparison(text)
+              ));
       },
       [optionList],
     );
 
     const getSelectedOptions = useCallback(() => {
       const opts =
-        values.map(
-          v => getOptionByText(v) ?? (addOption ? addOption.byText(v) : null),
-        ) ?? [];
+      values.map(
+        v => getOptionByText(v) ?? (addOption ? addOption.byText(v) : null),
+      ) ?? [];
       if (multiple) {
         return opts;
       }
       return opts.pop();
-    }, [values]);
-
+    }, [values, getOptionByText, addOption, multiple]);
+    
     const getValue = useCallback(() => {
-      return getSelectedOptions().map(o => getOptionValue(o));
+      const selected = getSelectedOptions();
+      if (multiple) {
+        return (selected ?? []).map(o => getOptionValue(o));
+      }
+      return selected ? getOptionValue(selected) : null;
     }, [getSelectedOptions, getOptionValue]);
+    
+    const getLastInsertText = useCallback( 
+      () => values[values.length - 1]
+      , [values]);
 
+      
+
+      
     useImperativeHandle(
       ref,
       () => ({
@@ -148,22 +178,29 @@ const Text = forwardRef(
         getSelectedOptions,
         setValues: setRealValues,
         setText: setValues,
-        setOptions: setOptionList,
+        setOptions: setOptionsOverride,
+        getLastInsertText,
       }),
-      [textRef],
+      [textRef, getValue, getSelectedOptions, setRealValues, setValues, setOptionsOverride, getLastInsertText],
     );
 
     const placeholderPress = useCallback((index) => {
       setFocusedIndex(index);
+      setOptionsVisible(true);
     }, []);
 
     const onClose = useCallback(() => {
       setFocusedIndex(null)
+      setOptionsVisible(false);
     }, []);
     const onOptionPress = useCallback(
       option => {
         const newValues = [...values];
         const newRealValues = [...realValues];
+        
+        // Ottieni le opzioni selezionate prima della modifica
+        const currentSelectedOptions = getSelectedOptions();
+        
         newValues[focusedIndex] = getOptionText(option);
         newRealValues[focusedIndex] = getOptionValue(option);
 
@@ -177,15 +214,46 @@ const Text = forwardRef(
         if (onChangeValue) {
           onChangeValue(multiple ? mergedValues : mergedValues[0]);
         }
-        if(onChangeOption &&  (!values[focusedIndex] || values[focusedIndex] !== getOptionValue(option))) {
-          onChangeOption(oldOptions, option);
+        if (onChangeOption && realValues[focusedIndex] !== getOptionValue(option)) {
+          onChangeOption(currentSelectedOptions, option);
         }
         setValues(newValues);
         setRealValues(newRealValues);
         onClose();
       },
-      [values, focusedIndex, onClose, onChangeValue, multiple, realValues],
-    )
+      [values, focusedIndex, onClose, onChangeValue, multiple, realValues, getSelectedOptions, getOptionText, getOptionValue, onChangeOption],
+    );
+
+    const [displayedOptions, setDisplayedOptions] = useState([]);
+
+    const updateOptions = useCallback(() => {
+      const res = (optionList ?? []).filter(filterOptions).sort(sortOptions);
+      setDisplayedOptions(res ?? []);
+    }, [optionList, filterOptions, sortOptions]);
+
+    useEffect(() => {
+      if (optionsVisible) {
+        updateOptions();
+      }
+    }, [optionsVisible, updateOptions, values, focusedIndex]);
+
+
+const changeText = useCallback(text => {
+                    const newValues = values.map((v, i) => (i === focusedIndex ? text : v));
+                    setValues(newValues);
+                    
+                    // Update real values and notify parent component
+                    const newRealValues = [...realValues];
+                    newRealValues[focusedIndex] = text;
+                    setRealValues(newRealValues);
+                    
+                    if (onChangeValue) {
+                      onChangeValue(multiple ? newRealValues : newRealValues[0]);
+                    }
+                    
+                    setOptionsVisible(text.length > 0);
+                  }, [focusedIndex, values, realValues, onChangeValue, multiple]);
+
     return (
       <View style={style.input}>
         {values.map((value, index) => (
@@ -252,23 +320,7 @@ const Text = forwardRef(
                       backgroundColor: 'white',
                     }
                   }
-                  onChangeText={text => {
-                    const newValues = values.map((v, i) => (i === index ? text : v));
-                    setValues(newValues);
-                    
-                    // Update real values and notify parent component
-                    const newRealValues = [...realValues];
-                    newRealValues[index] = text;
-                    setRealValues(newRealValues);
-                    
-                    if (onChangeValue) {
-                      onChangeValue(multiple ? newRealValues : newRealValues[0]);
-                    }
-                    
-                    if (text.length > 0) {
-                      setOptionsVisible(true);
-                    }
-                  }}
+                  onChangeText={changeText}
                   {...props}
                 />
                 <Button
@@ -308,7 +360,7 @@ const Text = forwardRef(
               <View style={[style?.input,{ flexDirection: 'row'}]}>
               {showOptionList && (
                 <Options
-                  options={options.filter(filterOptions).sort(sortOptions)}
+                  options={displayedOptions}
                   getOptionValue={getOptionValue}
                   getOptionText={getOptionText}
                   getOptionIcon={getOptionIcon}
@@ -366,7 +418,7 @@ Text.propTypes = {
   onPressOut: PropTypes.func,
   onLongPress: PropTypes.func,
   onLayout: PropTypes.func,
-  options: PropTypes.arrayOf(PropTypes.any),
+  options: PropTypes.any,
   getOptionValue: PropTypes.func,
   getOptionText: PropTypes.func,
   getOptionIcon: PropTypes.func,

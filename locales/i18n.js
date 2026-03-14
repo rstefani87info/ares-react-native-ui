@@ -3,7 +3,11 @@ import {getByPropertyPath} from '@ares/core/scripts'
 import {filterLike} from '@ares/core/text';
 import countries from './countries';
 import languages from './languages';
-import customStrings from '../../../../locales/languages';
+import { config } from '../config';
+
+const customStrings = new Proxy({}, {
+    get: (target, prop) => config.locales?.[prop] || {}
+});
 
 
 const defaultCountry = countries[global.countryCode || 'US'];

@@ -146,7 +146,7 @@ Field.propTypes = {
   required: PropTypes.bool,
   helperText: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   helperLink: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  options: PropTypes.array,
+  options: PropTypes.any,
   actions: PropTypes.array,
   exists: PropTypes.array,
   notExists: PropTypes.array,

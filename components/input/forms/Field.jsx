@@ -24,7 +24,7 @@ Field.propTypes={
     required: PropTypes.bool,
     formFieldStyle: PropTypes.object,
     formActionStyle: PropTypes.object,
-    options: PropTypes.array,
+    options: PropTypes.any,
   };
 export default function Field ({
     label,

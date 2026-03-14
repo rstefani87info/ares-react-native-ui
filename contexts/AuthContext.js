@@ -1,24 +1,24 @@
-import React, {
+import {
   createContext,
   useContext,
   useReducer,
   useEffect,
   useCallback,
+  useMemo,
 } from 'react';
 import localAvailableStorage from '../utils/localAvailableStorage';
 import {aReSContext} from './ARESContext';
-import aReS from '../../../../ares';
 
-const initialState = aReS.contextSettings?.auth?.initialState || {
+const defaultInitialState = {
   isAuthenticated: false,
   user: null,
   accessToken: null,
   role: null,
 };
 
-const AuthContext = createContext(initialState);
+const AuthContext = createContext(defaultInitialState);
 
-const authReducer = (state, action) => {
+const createAuthReducer = (initialState) => (state, action) => {
   switch (action.type) {
     case 'LOGIN':
       console.log('authReducer::login', action.payload);
@@ -47,21 +47,25 @@ const authReducer = (state, action) => {
 
 export const AuthProvider = ({children}) => {
   const availableStorage = localAvailableStorage();
-  const [state, dispatch] = useReducer(authReducer, initialState);
   const {state: aresState} = useContext(aReSContext);
+  const aReS = aresState.aReS;
+
+  const initialState = useMemo(() => aReS?.contextSettings?.auth?.initialState || defaultInitialState, [aReS]);
+  const authReducer = useMemo(() => createAuthReducer(initialState), [initialState]);
+  
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
   const login = useCallback(() => {
-    aReS.contextSettings?.auth?.login(aresState, dispatch, availableStorage), [aresState, availableStorage];
-  }
-);
+    aReS?.contextSettings?.auth?.login(aresState, dispatch, availableStorage);
+  }, [aReS, aresState, availableStorage]);
 
-  const logout = useCallback(() => aReS.contextSettings?.auth?.logout(aresState, dispatch, availableStorage), [aresState, availableStorage]);
+  const logout = useCallback(() => aReS?.contextSettings?.auth?.logout(aresState, dispatch, availableStorage), [aReS, aresState, availableStorage]);
 
-  const getProfile = useCallback(() => aReS.contextSettings?.auth?.getProfile(aresState, dispatch, availableStorage), [aresState, availableStorage]);
+  const getProfile = useCallback(() => aReS?.contextSettings?.auth?.getProfile(aresState, dispatch, availableStorage), [aReS, aresState, availableStorage]);
   
-  const refreshToken = useCallback(() => aresState.contextSettings?.auth?.refreshToken(aresState, dispatch, availableStorage), [aresState, availableStorage]);
+  const refreshToken = useCallback(() => aReS?.contextSettings?.auth?.refreshToken(aresState, dispatch, availableStorage), [aReS, aresState, availableStorage]);
 
-  const validateToken = useCallback(() => aReS.contextSettings?.auth?.validateToken(aresState, dispatch, availableStorage, refreshToken), [aresState, refreshToken, availableStorage]);
+  const validateToken = useCallback(() => aReS?.contextSettings?.auth?.validateToken(aresState, dispatch, availableStorage, refreshToken), [aReS, aresState, availableStorage, refreshToken]);
 
   useEffect(() => {
     const init = async () => {

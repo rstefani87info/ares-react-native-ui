@@ -1,4 +1,5 @@
 import languages, { defaultLang } from '../languages';
+import {dataDescriptors} from '@ares/core/dataDescriptors.js'
 const countries = {
   US: {
     label: 'United_States',

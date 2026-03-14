@@ -1,8 +1,9 @@
 import React, { useCallback } from "react";
-import { Dimensions, Text } from "react-native";
+import { Dimensions } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import Button from "../../actions/Button";
 import TranslatedText from "../../../output/TranslatedText";
+import { isPrimitive } from "@ares/core/scripts";
 
 const {width, height} = Dimensions.get('screen');
 
@@ -22,7 +23,9 @@ export default function Options({
 
     const showOptions = useCallback(() => {
         
-        const ret = options?.filter(o => !o.hidden || (hideSelected && !o.selected)).map(o => (
+        const ret = options
+          ?.filter(o => !o?.hidden && (!hideSelected || !o?.selected))
+          .map(o => (
         <Option getOptionValue={getOptionValue}
          getOptionText={getOptionText}
          getOptionIcon={getOptionIcon}

@@ -67,7 +67,7 @@ const  CheckBox = forwardRef((
       options={options}
       getOptionValue={getOptionValue}
       getOptionText={getOptionText}
-      showList={false}
+      showOptionList={false}
       {...props}
       />{ labelDirection === 'right' && <Button
       id={`${id}_label`}

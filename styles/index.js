@@ -1,16 +1,20 @@
 import * as implicitColors from "./colors";
-import implicitAssets from "../../../../styles/assets";
-import * as styles from "../../../../styles/stylesheet";
-import mainTheme from "../../../../styles/themes/mainTheme";
+import { config } from "../config";
 import PropTypes from "prop-types";
 
-export const assets = implicitAssets;
+export const assets = new Proxy({}, {
+    get: (target, prop) => config.assets?.[prop]
+});
 
 export const colors = implicitColors;
 
-export const globalStyle = styles;
+export const globalStyle = new Proxy({}, {
+    get: (target, prop) => config.styles?.[prop]
+});
 
-export const themeList = { mainTheme };
+export const themeList = new Proxy({}, {
+    get: (target, prop) => config.themes?.[prop]
+});
 
 //TODO: convertire in sistemma a puntamenti css
 // export function getStyle(config, type = null, name = null) {
