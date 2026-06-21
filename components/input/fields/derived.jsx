@@ -1,35 +1,37 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import dateAndTime from '@ares/core/datesAndTime';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import Text from '@ares/react-native-ui/components/input/fields/Text';
 import useLocales from '@ares/react-native-ui/locales/useLocales';
 import {regexMap} from '@ares/core/dataDescriptors';
+import Button from '@ares/react-native-ui/components/input/actions/Button';
 
 
 
 
 function DateTimePicker ({etxtboxRef, type, style}){
     const { currentLanguage } = useLocales();
-    
+
     const [show, setShow] = useState(false);
+    const [mode, setMode] = useState(type === 'time' ? 'time' : 'date');
     const dateFormat = currentLanguage[type];
-    const is24Hour = dateFormat.includes("HH");
+    const is24Hour = dateFormat.includes('HH');
     const getDateTime = () => {
       const stringDate =  etxtboxRef.value;
       const date = dateAndTime.parse(stringDate, dateFormat);
       return date;
-    }
+    };
     const onDateChange = (event, selectedDate) => {
       const currentDate = selectedDate;
       setShow(false);
-      etxtboxRef.value=dateAndTime.format(currentDate, dateFormat, dateFormat);
+      etxtboxRef.value = dateAndTime.format(currentDate, dateFormat, dateFormat);
     };
 
     const pickerTrigger = (currentMode) => {
       setShow(true);
       setMode(currentMode);
     };
-    return <> <Button showIcon={() => <Icon name="calendar-alt" />} onPress={pickerTrigger} />
+    return <> <Button text="..." onPress={() => pickerTrigger(type === 'time' ? 'time' : 'date')} />
         {show && (
             <RNDateTimePicker
               testID="dateTimePicker"
@@ -39,21 +41,21 @@ function DateTimePicker ({etxtboxRef, type, style}){
               onChange={onDateChange}
             />
         )}
-        </>
+        </>;
   }
- 
+
 
   const types = {
-    number: {  keyboardType: "numeric"},
-    tel: {  keyboardType: "phone-pad" },
-    email: {  keyboardType: "email-address"},
+    number: {  keyboardType: 'numeric'},
+    tel: {  keyboardType: 'phone-pad' },
+    email: {  keyboardType: 'email-address'},
     password: {  secureTextEntry: true},
-    url: {  keyboardType: "url" },
-    date: { keyboardType: "phone-pad" , editable: false, additionalComponents:[DateTimePicker] },
-    datetime: {   keyboardType: "phone-pad" , editable: false, additionalComponents:[DateTimePicker]},
-    time: {  keyboardType: "phone-pad" , editable: false, additionalComponents:[DateTimePicker]},
-    countdown: {  keyboardType: "phone-pad" , editable: false, additionalComponents:[DateTimePicker] },
-    ip: {  keyboardType: "numeric"},
+    url: {  keyboardType: 'url' },
+    date: { keyboardType: 'phone-pad' , editable: false, additionalComponents:[DateTimePicker] },
+    datetime: {   keyboardType: 'phone-pad' , editable: false, additionalComponents:[DateTimePicker]},
+    time: {  keyboardType: 'phone-pad' , editable: false, additionalComponents:[DateTimePicker]},
+    countdown: {  keyboardType: 'phone-pad' , editable: false, additionalComponents:[DateTimePicker] },
+    ip: {  keyboardType: 'numeric'},
 
   };
 
@@ -131,16 +133,16 @@ export const CommonName = forwardRef((props, ref) => <Text regex={regexMap.commo
 export const PersonalName = forwardRef((props, ref) => {
     props.style = props.style || {};
     props.style.input = props.style.input || {};
-    props.style.input.textTransform = "capitalize";
-    return <Text regex={regexMap.personalName} type="text" {...props} ref={ref} />
+    props.style.input.textTransform = 'capitalize';
+    return <Text regex={regexMap.personalName} type="text" {...props} ref={ref} />;
 });
 export const Boolean = forwardRef((props, ref) => {
     props.options = props.options ?? [true, false];
-    return <Text regex={regexMap.boolean} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.boolean} type="text" {...props} ref={ref} />;
 });
 export const NullableBoolean = forwardRef((props, ref) => {
     props.options = props.options ?? [true, false, undefined];
-    return <Text type="text" {...props} ref={ref} />
+    return <Text type="text" {...props} ref={ref} />;
 });
 export const GPSCoordinate = forwardRef((props, ref) => <Text regex={regexMap.gpsCoordinate} type="text" {...props} ref={ref} />);
 export const GPSCoordinates = forwardRef((props, ref) => <Text regex={regexMap.gpsCoordinates} type="text" {...props} ref={ref} />);
@@ -151,9 +153,9 @@ export const ImageFileExtension = forwardRef((props, ref) => {
         regexMap.imageFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.imageFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.imageFileExtension} type="text" {...props} ref={ref} />;
 });
 export const VideoFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -161,9 +163,9 @@ export const VideoFileExtension = forwardRef((props, ref) => {
         regexMap.videoFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.videoFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.videoFileExtension} type="text" {...props} ref={ref} />;
 });
 export const AudioFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -171,9 +173,9 @@ export const AudioFileExtension = forwardRef((props, ref) => {
         regexMap.audioFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.audioFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.audioFileExtension} type="text" {...props} ref={ref} />;
 });
 export const DocumentFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -181,9 +183,9 @@ export const DocumentFileExtension = forwardRef((props, ref) => {
         regexMap.documentFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.documentFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.documentFileExtension} type="text" {...props} ref={ref} />;
 });
 export const OOPFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -191,9 +193,9 @@ export const OOPFileExtension = forwardRef((props, ref) => {
         regexMap.oopFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.oopFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.oopFileExtension} type="text" {...props} ref={ref} />;
 });
 export const TextFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -201,9 +203,9 @@ export const TextFileExtension = forwardRef((props, ref) => {
         regexMap.textFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.textFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.textFileExtension} type="text" {...props} ref={ref} />;
 });
 export const ProgrammingLanguageFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -211,9 +213,9 @@ export const ProgrammingLanguageFileExtension = forwardRef((props, ref) => {
         regexMap.programmingLanguageFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.programmingLanguageFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.programmingLanguageFileExtension} type="text" {...props} ref={ref} />;
 });
 export const DataFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -221,9 +223,9 @@ export const DataFileExtension = forwardRef((props, ref) => {
         regexMap.dataFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.dataFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.dataFileExtension} type="text" {...props} ref={ref} />;
 });
 export const MarkupLanguageFileExtension = forwardRef((props, ref) => {
     props.options =
@@ -231,11 +233,10 @@ export const MarkupLanguageFileExtension = forwardRef((props, ref) => {
         regexMap.markupLanguageFileExtension.pattern
             .toString()
             .match(/\(([^)]+)\)/)[1]
-            ?.split("|");
+            ?.split('|');
     props.options = [...new Set(props.options.map((o) => o.toLowerCase()))];
-    return <Text regex={regexMap.markupLanguageFileExtension} type="text" {...props} ref={ref} />
+    return <Text regex={regexMap.markupLanguageFileExtension} type="text" {...props} ref={ref} />;
 });
 
 
 
-    

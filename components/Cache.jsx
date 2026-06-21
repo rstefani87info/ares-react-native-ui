@@ -1,12 +1,11 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchDataRequest } from "../store/actions";
-import Flash from "./Flash";
-import Loading from "./output/Loading";
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDataRequest } from '../store/actions';
+import Flash from './Flash';
+import Loading from './output/Loading';
 
 export default function CacheComponent({
   key,
-  initialValue,
   fetchFunction,
   resultsOrganizeFunction,
   refreshRate,
@@ -20,10 +19,10 @@ export default function CacheComponent({
   useEffect(() => {
     setLoading(true);
     dispatch(
-      fetchDataRequest(fetchFunction, organizeFunction, key, refreshRate)
+      fetchDataRequest(fetchFunction, resultsOrganizeFunction, key, refreshRate)
     );
     setLoading(false);
-  }, [dispatch, setLoading, fetchFunction, organizeFunction, key, refreshRate]);
+  }, [dispatch, fetchFunction, resultsOrganizeFunction, key, refreshRate]);
 
   return (
     <>

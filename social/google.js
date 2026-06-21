@@ -1,9 +1,10 @@
-import { Platform } from "react-native";
+import { Platform } from 'react-native';
 import {
   GoogleSignin,
   statusCodes,
-} from "@react-native-google-signin/google-signin";
-import {i18n} from "../locales";
+} from '@react-native-google-signin/google-signin';
+import {i18n} from '../locales';
+import { config } from '../config';
 
 const Google = {
   setup: function (settings) {
@@ -21,14 +22,14 @@ const Google = {
       settings.handleError ??
       ((error) => {
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-          console.error("User cancelled the login process");
+          config.logger?.error?.('User cancelled the login process');
         } else if (error.code === statusCodes.IN_PROGRESS) {
-          console.error("Sign in is already in progress");
+          config.logger?.error?.('Sign in is already in progress');
         } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-          console.error("Google Play Services not available or outdated");
+          config.logger?.error?.('Google Play Services not available or outdated');
         } else {
-          console.error("Sign in error:", error);
-          console.error("stack", error.stack);
+          config.logger?.error?.('Sign in error:', error);
+          config.logger?.error?.('stack', error?.stack);
         }
       });
 
@@ -37,9 +38,9 @@ const Google = {
   getUserAdditionalInfo: async function (accessToken) {
     try {
       const response = await fetch(
-        "https://people.googleapis.com/v1/people/me?personFields=birthdays,genders",
+        'https://people.googleapis.com/v1/people/me?personFields=birthdays,genders',
         {
-          method: "GET",
+          method: 'GET',
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -47,9 +48,9 @@ const Google = {
       );
 
       const data = await response.json();
-      console.log("User additional info:", data);
+      config.logger?.log?.('User additional info:', data);
     } catch (error) {
-      console.error("Error getting user additional info:", error);
+      config.logger?.error?.('Error getting user additional info:', error);
     }
   },
 
@@ -66,7 +67,7 @@ const Google = {
        this.userInfo = await GoogleSignin.signIn();
        return this.userInfo;
     }catch(error){
-      console.error(`${i18n.translate("ares.google.sign_in_error")}:`, error);
+      config.logger?.error?.(`${i18n.translate('ares.google.sign_in_error')}:`, error);
       this.handleError(error);
     }
   },
@@ -74,19 +75,23 @@ const Google = {
   signOut: async function () {
     try {
       const logout = await GoogleSignin.signOut();
-      console.log("Successfully signed out");
+      config.logger?.log?.('Successfully signed out');
       return logout;
     } catch (error) {
-      console.error(`${i18n.translate("ares.google.sign_out_error")}:`, error);
+      config.logger?.error?.(`${i18n.translate('ares.google.sign_out_error')}:`, error);
     }
   },
 
-  getTokenInfo: async function (token) {
+  getTokenInfo: async function (token, tokenType = 'id_token') {
     try {
-      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${token}`);
+      const response = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?${tokenType}=${encodeURIComponent(
+          token,
+        )}`,
+      );
       return await response.json();
     } catch (error) {
-      console.error(`${i18n.translate("ares.google.fetching_token_error")}:`, error);
+      config.logger?.error?.(`${i18n.translate('ares.google.fetching_token_error')}:`, error);
       throw error;
     }
   },
@@ -97,7 +102,7 @@ const Google = {
       const data = await response.json();
       return data.results[0].formatted_address;
     } catch (error) {
-      console.error(`${i18n.translate("ares.google.reverseGeocodeError")}:`, error);
+      config.logger?.error?.(`${i18n.translate('ares.google.reverseGeocodeError')}:`, error);
       throw error;
     }
   },

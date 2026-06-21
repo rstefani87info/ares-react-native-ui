@@ -1,12 +1,12 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {
   Modal as RNModal,
   Text,
   TouchableOpacity,
   View,
-  StyleSheet,
 } from 'react-native';
 import PropTypes from 'prop-types';
+import {getElevationStyle, getUiTokens} from '../../styles';
 
 Modal.propTypes = {
   title: PropTypes.string.isRequired,
@@ -18,10 +18,15 @@ Modal.propTypes = {
   }).isRequired,
   reset: PropTypes.func.isRequired,
   children: PropTypes.node,
+  visible: PropTypes.bool,
+  style: PropTypes.object,
+  onClose: PropTypes.func,
 };
 
-export function Modal({title, message, actions, behavior, reset, children}) {
+export function Modal({title, message, actions, behavior, reset, children, visible: controlledVisible, style, onClose}) {
+  const tokens = getUiTokens();
   const [visible, setVisible] = useState(false);
+  const actualVisible = controlledVisible ?? visible;
 
   const handleModal = () => {
     if (behavior.closeOnOutClick) {
@@ -30,24 +35,36 @@ export function Modal({title, message, actions, behavior, reset, children}) {
     if (!behavior.keepStatusAfterClose) {
       reset();
     }
+    if (typeof onClose === 'function') {
+      onClose();
+    }
   };
 
   return (
     <RNModal
-      visible={visible}
+      visible={actualVisible}
       animationType="slide"
       transparent={true}
       onRequestClose={handleModal}>
-      <View style={styles.container}>
-        <View style={styles.modal}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+      <View style={[styles.container(tokens), style?.container]}>
+        <View style={[styles.modal(tokens), style?.modal]}>
+          <Text style={[styles.title(tokens), style?.title]}>{title}</Text>
+          <Text style={[styles.message(tokens), style?.message]}>{message}</Text>
           {children}
-          <View style={styles.actions}>
+          <View style={[styles.actions(tokens), style?.actions]}>
             {Object.entries(actions).map(
               ([actionTitle, actionFunction], key) => (
-                <TouchableOpacity key={key} onPress={actionFunction}>
-                  <Text style={styles.action}>{actionTitle}</Text>
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => {
+                    if (typeof actionFunction === 'function') {
+                      actionFunction();
+                    }
+                    if (!behavior.keepStatusAfterClose) {
+                      reset();
+                    }
+                  }}>
+                  <Text style={[styles.action(tokens), style?.action]}>{actionTitle}</Text>
                 </TouchableOpacity>
               ),
             )}
@@ -58,32 +75,46 @@ export function Modal({title, message, actions, behavior, reset, children}) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+export default Modal;
+
+const styles = {
+  container: (tokens) => ({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modal: {
-    backgroundColor: 'white',
-    borderRadius: 5,
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    marginBottom: 10,
-  },
-  message: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  actions: {
+    backgroundColor: tokens.colors.overlay,
+    padding: tokens.spacing.lg,
+  }),
+  modal: (tokens) => ({
+    width: '100%',
+    maxWidth: 520,
+    backgroundColor: tokens.colors.surface,
+    borderRadius: tokens.radii.lg,
+    padding: tokens.spacing.lg,
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    ...getElevationStyle(2),
+  }),
+  title: (tokens) => ({
+    fontSize: tokens.typography.size.xl,
+    fontWeight: tokens.typography.weight.bold,
+    color: tokens.colors.text,
+    marginBottom: tokens.spacing.xs,
+  }),
+  message: (tokens) => ({
+    fontSize: tokens.typography.size.md,
+    color: tokens.colors.textMuted,
+    marginBottom: tokens.spacing.md,
+  }),
+  actions: (tokens) => ({
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  action: {
-    fontSize: 16,
-    color: '#007AFF',
-  },
-});
+    justifyContent: 'flex-end',
+    gap: tokens.spacing.sm,
+    marginTop: tokens.spacing.md,
+  }),
+  action: (tokens) => ({
+    fontSize: tokens.typography.size.md,
+    color: tokens.colors.link,
+    fontWeight: tokens.typography.weight.semibold,
+  }),
+};

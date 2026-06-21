@@ -1,16 +1,17 @@
-import React, { createContext, useReducer, useEffect } from 'react';
+import { createContext, useReducer, useEffect } from 'react';
 import * as crypto from '@ares/core/crypto';
 import DeviceInfo from 'react-native-device-info';
 import { config } from '../config';
-
-export const aReSContext = createContext();
 
 const initialState = {
     datasourceMap: {},
     loading: true,
     error: null,
-    get aReS() { return config.ares; }
+    sessionId: null,
+    get aReS() { return config.ares; },
 };
+
+export const aReSContext = createContext({ state: initialState, dispatch: () => {}, fetchDatasources: async () => {} });
 
 function ARESReducer(state, action) {
     switch (action.type) {
@@ -20,14 +21,17 @@ function ARESReducer(state, action) {
                 datasourceMap: action.payload || {},
                 loading: false,
                 error: null,
-                aReS: config.ares
             };
         case 'SET_ERROR':
             return {
                 ...state,
                 loading: false,
                 error: action.payload,
-                aReS: config.ares
+            };
+        case 'SET_SESSION_ID':
+            return {
+                ...state,
+                sessionId: action.payload || null,
             };
         default:
             return state;
@@ -40,22 +44,31 @@ export function ARESProvider  ({ children }) {
     const fetchDatasources = async () => {
         const aReS = config.ares;
         if (!aReS) {
-            console.error("ARES instance not configured in @ares/react-native-ui");
+            const message = 'ARES instance not configured in @ares/react-native-ui. Call setConfig({ ares }) before rendering.';
+            config.logger?.error?.(message);
+            dispatch({ type: 'SET_ERROR', payload: message });
             return;
         }
         try {
             await aReS.initAllDatasources(aReS.datasourceListToBeInstalled);
             dispatch({ type: 'FETCH_DATASOURCES', payload: aReS.datasourceMap });
         } catch (error) {
-            aReS.console.error('ARESProvider fetchDatasources error:', error , error.getStackTrace());
+            config.logger?.error?.('ARESProvider fetchDatasources error:', error);
             dispatch({ type: 'SET_ERROR', payload: error?.message ?? 'Unknown error' });
         }
     };
 
     useEffect(() => {
         fetchDatasources();
-        const getSessionID = async () => global.sessionID = crypto.getUniqueId(await DeviceInfo.getUniqueId());
-        getSessionID();
+        const setSessionID = async () => {
+            try {
+                const sessionId = crypto.getUniqueId(await DeviceInfo.getUniqueId());
+                dispatch({ type: 'SET_SESSION_ID', payload: sessionId });
+            } catch (error) {
+                config.logger?.error?.('ARESProvider sessionId error:', error);
+            }
+        };
+        setSessionID();
     }, []);
 
     return (

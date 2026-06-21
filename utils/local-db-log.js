@@ -1,4 +1,5 @@
 import SQLite from 'react-native-sqlite-storage';
+import { config } from '../config';
 
 const db = SQLite.openDatabase(
   {
@@ -6,11 +7,11 @@ const db = SQLite.openDatabase(
     location: 'default',
   },
   () => {
-    console.log('Database opened successfully');
+    config.logger?.log?.('Database opened successfully');
     createLogsTable();
   },
   error => {
-    console.error('Error while opening database', error);
+    config.logger?.error?.('Error while opening database', error);
   }
 );
 
@@ -26,10 +27,10 @@ function createLogsTable() {
       );`,
       [],
       () => {
-        console.log('Tabella Logs creata con successo');
+        config.logger?.log?.('Tabella Logs creata con successo');
       },
       error => {
-        console.error('Errore nella creazione della tabella Logs', error);
+        config.logger?.error?.('Errore nella creazione della tabella Logs', error);
       }
     );
   });
@@ -37,19 +38,19 @@ function createLogsTable() {
 
 export function logMessage(message, level = 'info') {
   const stack = new Error().stack;
-  const caller = stack.split('\n')[2].trim(); 
+  const caller = stack.split('\n')[2].trim();
 
-  console.log(`${level.toUpperCase()}: ${message} (at ${caller})`);
+  config.logger?.log?.(`${level.toUpperCase()}: ${message} (at ${caller})`);
 
   db.transaction(tx => {
     tx.executeSql(
       'INSERT INTO Logs (message, level, location) VALUES (?, ?, ?)',
       [message, level, caller],
-      (tx, results) => {
-        console.log('Log saved to database', results);
+      (_tx, results) => {
+        config.logger?.log?.('Log saved to database', results);
       },
       error => {
-        console.error('Error while inserting log', error);
+        config.logger?.error?.('Error while inserting log', error);
       }
     );
   });
@@ -61,7 +62,7 @@ export function getLogs(callback) {
     tx.executeSql(
       'SELECT * FROM Logs',
       [],
-      (tx, results) => {
+      (_tx, results) => {
         const logs = [];
         const rows = results.rows;
         for (let i = 0; i < rows.length; i++) {
@@ -70,7 +71,7 @@ export function getLogs(callback) {
         callback(logs);
       },
       error => {
-        console.error('Error while getting logs', error);
+        config.logger?.error?.('Error while getting logs', error);
       }
     );
   });
@@ -82,12 +83,12 @@ export function clearLogs(callback) {
     tx.executeSql(
       'DELETE FROM Logs',
       [],
-      (tx, results) => {
-        console.debug('All logs cleared from database', results);
-        if (callback) callback();
+      (_tx, results) => {
+        config.logger?.debug?.('All logs cleared from database', results);
+        if (callback) {callback();}
       },
       error => {
-        console.error('Error while clearing logs', error);
+        config.logger?.error?.('Error while clearing logs', error);
       }
     );
   });

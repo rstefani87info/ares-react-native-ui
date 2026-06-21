@@ -1,20 +1,22 @@
-import { View , Text as RNText} from "react-native";
-import PropTypes, { func } from "prop-types";
-import { isEmptyString } from "@ares/core/text";
-import { regexMap } from "@ares/core/dataDescriptors";
-import Button from "../actions/Button";
+import { View} from 'react-native';
+import PropTypes from 'prop-types';
+import { isEmptyString } from '@ares/core/text';
+import { regexMap } from '@ares/core/dataDescriptors';
+import Button from '../actions/Button';
 import TranslatedText from '../../output/TranslatedText';
-import { CheckBox } from "./CheckBox";
-import { Switch } from "./Switch";
-import  Text from "@ares/react-native-ui/components/input/fields/Text";
-import * as derived from "./derived";
-import { min, rest } from "lodash";
+import Link from '../../output/Link';
+import { translate } from '../../../locales/i18n';
+import CheckBox from './CheckBox';
+import Switch from './Switch';
+import  Text from '@ares/react-native-ui/components/input/fields/Text';
+import * as derived from './derived';
+import {getUiTokens} from '../../../styles';
 
- 
+
 
 export const types = {
   Switch,CheckBox,Text,
- ...derived
+ ...derived,
 };
 
 
@@ -22,7 +24,7 @@ export const types = {
  * Data descriptors
  */
 export const dataDescriptors = {
-  
+
   [regexMap.text.id]: Text,
   [regexMap.countdown.id]:derived.Countdown,
   [regexMap.isodate.id]:derived.Date,
@@ -54,7 +56,7 @@ export const dataDescriptors = {
   [regexMap.gpsCoordinate.id]:derived.GPSCoordinate,
   [regexMap.gpsCoordinates.id]:derived.GPSCoordinates,
   [regexMap.hashtag.id]:derived.Hashtag,
- 
+
   [regexMap.imageFileExtension.id]:derived.ImageFileExtension,
   [regexMap.videoFileExtension.id]:derived.VideoFileExtension,
   [regexMap.audioFileExtension.id]: derived.AudioFileExtension,
@@ -112,14 +114,14 @@ export const dataDescriptors = {
   [regexMap.hashes.ripemd_320.id]:derived.RIPEMD_320,
   [regexMap.hashes.ripemd_384.id]: derived.RIPEMD_384,
   [regexMap.hashes.ripemd_512.id]:derived.RIPEMD_512,
- 
+
   [regexMap.hashes.crc32c.id]:derived.CRC32C,
-   
+
   [regexMap.hashes.crc64ecma.id]:derived.CRC64ECMA,
   [regexMap.hashes.crc64x.id]:derived.CRC64X,
   [regexMap.hashes.crc64xmod.id]:derived.CRC64XMode,
-   
-  
+
+
   [regexMap.mimeType.id]:derived.MIMEType,
     [regexMap.identity.id]:derived.Identity,
   [regexMap.jwt.id]:derived.JWT,
@@ -155,7 +157,7 @@ Field.propTypes = {
 export default function Field({
   id,
   name,
-  type = "text",
+  type = 'text',
   style,
   placeholder,
   label,
@@ -168,53 +170,71 @@ export default function Field({
 
   ...props
 }, key) {
-  
-  if(!mask) mask = ({node, ...rest}) => (
+  const tokens = getUiTokens(style?.tokens);
+
+  const baseStyle = {
+    wrapper: {
+      minWidth: '100%',
+      padding: tokens.spacing.md,
+      borderRadius: tokens.radii.lg,
+      borderWidth: 1,
+      borderColor: tokens.colors.border,
+      backgroundColor: tokens.colors.surface,
+    },
+    label: {
+      marginBottom: tokens.spacing.xs,
+      color: tokens.colors.text,
+      fontSize: tokens.typography.size.sm,
+      fontWeight: tokens.typography.weight.semibold,
+    },
+    helper: {
+      wrapper: {flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs, marginBottom: tokens.spacing.sm},
+      text: {color: tokens.colors.textMuted, fontSize: tokens.typography.size.sm},
+      link: {},
+    },
+    actions: {
+      wrapper: {flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.sm, marginTop: tokens.spacing.sm},
+    },
+  };
+
+  if(!mask) {mask = ({node, ...rest}) => (
     <View
     key={key}
-    style={style?.wrapper ?? {minWidth: '100%'}}>
+    style={[baseStyle.wrapper, style?.wrapper]}>
     {!isEmptyString(label) && <TranslatedText
-      style={style?.label } text={label}/>}
+      style={[baseStyle.label, style?.label]} text={label}/>}
     {helperText || helperLink ? <View
-      style={{
-        flexDirection: 'row',
-        ...(style?.helper?.wrapper ?? {}),
-      }}>
+      style={[baseStyle.helper.wrapper, style?.helper?.wrapper]}>
       {helperText ? (
       <TranslatedText
-        text={helperText} 
-        style={ style?.helper?.text ?? {} }
-        /> ): null }
+        text={helperText}
+        style={[baseStyle.helper.text, style?.helper?.text]}
+        /> ) : null }
       {helperLink && (
         <Link
-          style={ style?.helper?.linK}
-          source={helperLink?.source}>
-          {translate(helperLink?.text)}
+          style={[baseStyle.helper.link, style?.helper?.link]}
+          url={helperLink?.source ?? helperLink?.url}>
+          {translate(helperLink?.text ?? '')}
         </Link>
       )}
     </View> : null}
      {node}
     <View
-      style={{
-        flexDirection: 'row',
-        ...style?.actions?.wrapper,
-      }}>
+      style={[baseStyle.actions.wrapper, style?.actions?.wrapper]}>
       {actions &&
         actions.map((fieldAction, index) => (
           <Button
             key={index}
             onPress={fieldAction[name]}
-            style={  
-              fieldAction?.style
-            }
+            style={fieldAction?.style}
             text={fieldAction?.label}
             icon={fieldAction?.icon}
           />
         ))}
     </View>
   </View>
-  );
-  
+  );}
+
   if (type && type instanceof Function) {
     return mask({node:type({
       id,
@@ -228,11 +248,11 @@ export default function Field({
       actions,
       ...props,
     })});
-    
+
   }
- else if (typeof type === "string" ) {
+ else if (typeof type === 'string' ) {
     const ExistingType = getComponent(type);
-   const component = (<ExistingType   
+   const component = (<ExistingType
       id = {id}
       name = {name}
       type  = {type}
@@ -248,7 +268,6 @@ export default function Field({
     return mask({node:component});
   }
   else {
-    console.error("Field: No type found for ", type);
-    return null;
+    throw new Error(`Field: No type found for ${String(type)}`);
   }
 }

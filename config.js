@@ -3,7 +3,9 @@ export const config = {
     styles: {},
     themes: {},
     locales: {},
-    ares: null
+    ares: null,
+    logger: null,
+    debug: false,
 };
 
 export const setConfig = (newConfig) => {

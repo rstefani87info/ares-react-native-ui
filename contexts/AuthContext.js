@@ -7,6 +7,7 @@ import {
   useMemo,
 } from 'react';
 import localAvailableStorage from '../utils/localAvailableStorage';
+import {config} from '../config';
 import {aReSContext} from './ARESContext';
 
 const defaultInitialState = {
@@ -21,7 +22,6 @@ const AuthContext = createContext(defaultInitialState);
 const createAuthReducer = (initialState) => (state, action) => {
   switch (action.type) {
     case 'LOGIN':
-      console.log('authReducer::login', action.payload);
       return {
         ...state,
         isAuthenticated: true,
@@ -47,22 +47,35 @@ const createAuthReducer = (initialState) => (state, action) => {
 
 export const AuthProvider = ({children}) => {
   const availableStorage = localAvailableStorage();
-  const {state: aresState} = useContext(aReSContext);
+  const aresContextValue = useContext(aReSContext);
+  if (!aresContextValue?.state) {
+    throw new Error('AuthProvider requires ARESProvider. Wrap your app with <ApplicationRoot> or <ARESProvider>.');
+  }
+  const {state: aresState} = aresContextValue;
   const aReS = aresState.aReS;
+  if (!aReS) {
+    const message = 'ARES instance not configured in @ares/react-native-ui. Call setConfig({ ares }) before rendering.';
+    config.logger?.error?.(message);
+    throw new Error(message);
+  }
 
   const initialState = useMemo(() => aReS?.contextSettings?.auth?.initialState || defaultInitialState, [aReS]);
   const authReducer = useMemo(() => createAuthReducer(initialState), [initialState]);
-  
+
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const login = useCallback(() => {
-    aReS?.contextSettings?.auth?.login(aresState, dispatch, availableStorage);
+    return aReS?.contextSettings?.auth?.login(
+      aresState,
+      dispatch,
+      availableStorage,
+    );
   }, [aReS, aresState, availableStorage]);
 
   const logout = useCallback(() => aReS?.contextSettings?.auth?.logout(aresState, dispatch, availableStorage), [aReS, aresState, availableStorage]);
 
   const getProfile = useCallback(() => aReS?.contextSettings?.auth?.getProfile(aresState, dispatch, availableStorage), [aReS, aresState, availableStorage]);
-  
+
   const refreshToken = useCallback(() => aReS?.contextSettings?.auth?.refreshToken(aresState, dispatch, availableStorage), [aReS, aresState, availableStorage]);
 
   const validateToken = useCallback(() => aReS?.contextSettings?.auth?.validateToken(aresState, dispatch, availableStorage, refreshToken), [aReS, aresState, availableStorage, refreshToken]);
@@ -84,4 +97,4 @@ export const AuthProvider = ({children}) => {
 
 export const useAuth = () => useContext(AuthContext);
 
- 
+

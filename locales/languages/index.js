@@ -1,7 +1,7 @@
 
 import en_us from './en-US';
 import it_it from './it-IT';
-import custom from '../../../../../locales/languages/index';
+import { config } from '../../config';
 
 const languages = {
   enUS: {
@@ -20,7 +20,9 @@ const languages = {
   },
 };
 
- 
+
 
 export const defaultLang = languages.enUS.code;
-export default languages;
+export default new Proxy(languages, {
+  get: (target, prop) => config.locales?.languages?.[prop] ?? target[prop],
+});

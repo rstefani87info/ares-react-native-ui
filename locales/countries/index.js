@@ -1,5 +1,5 @@
-import languages, { defaultLang } from '../languages';
-import {dataDescriptors} from '@ares/core/dataDescriptors.js'
+import languages from '../languages';
+import {dataDescriptors} from '@ares/core/dataDescriptors.js';
 const countries = {
   US: {
     label: 'United_States',
@@ -46,7 +46,7 @@ const countries = {
       nation: {...dataDescriptors.text, maxLength: 255,ignoreCase:true, pattern: /^IT$/i , viewPosition: 6},
     },
     phoneNumberPrefix: '+39',
-  }
+  },
 };
 
 

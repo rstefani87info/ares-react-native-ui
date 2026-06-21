@@ -1,12 +1,11 @@
 
-import React from 'react';
 import PropTypes from 'prop-types';
-import Controller from '../fields/Field';
 import {fuseObjects} from '@ares/core/objects';
-import useLocales from '../../../locales/useLocales';
+import {Controller, useFormContext} from 'react-hook-form';
+import InputField from '../fields/Field';
 
 
-Field.propTypes={
+Field.propTypes = {
     label: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     type: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
     placeholder: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
@@ -37,9 +36,9 @@ export default function Field ({
     mask,
     actions,
     style,
-    required=false,
-    formFieldStyle={},
-    formActionStyle={},
+    required = false,
+    formFieldStyle = {},
+    formActionStyle = {},
     options,
     ...props
   },key) {
@@ -81,35 +80,35 @@ export default function Field ({
     //   }
     // }
 
-    
-    const newStyle={};
+
+    const newStyle = {};
     newStyle.component = fuseObjects(formFieldStyle?.component, style?.component);
-    newStyle.wrapper={
+    newStyle.wrapper = {
       ...(formFieldStyle?.wrapper ?? {}),
       ...(style?.wrapper ?? {}),
     };
-    newStyle.label=[
+    newStyle.label = [
       ((formFieldStyle?.label) ?? {}),
       (style?.label ?? {}),
     ];
-    newStyle.helper={};
-    newStyle.helper.wrapper={
+    newStyle.helper = {};
+    newStyle.helper.wrapper = {
       ...(formFieldStyle?.helper?.wrapper ?? {}),
       ...(style?.helper?.wrapper ?? {}),
     };
-    newStyle.helper.text={
+    newStyle.helper.text = {
       ...(formFieldStyle?.helper?.text ?? {}),
-      ...(style?.helper?.text ?? {})
+      ...(style?.helper?.text ?? {}),
     };
-    newStyle.helper.link=fuseObjects(
+    newStyle.helper.link = fuseObjects(
       fuseObjects(
         formFieldStyle?.helper?.link,
         style?.helper?.link,
       ),
       helperLink?.style,
     );
-    newStyle.actions={};
-    newStyle.actions.wrapper={
+    newStyle.actions = {};
+    newStyle.actions.wrapper = {
       ...fuseObjects(
         formFieldStyle?.actions?.wrapper,
         style?.actions?.wrapper,
@@ -122,22 +121,38 @@ export default function Field ({
         );
       }
     );
-        
+    const {control, formState} = useFormContext();
+    const error = formState?.errors?.[props?.name];
+    const errorMessageKey = error ? (error?.message ?? `ares.form.validation.${error?.type ?? 'default'}`) : null;
+
     return (
       <Controller
-        mask={mask}
-        options={options}
-        label={label}
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        style={newStyle}
-        helperLink={helperLink}
-        helperText={helperText}
-        actions={actions}
-        exists={exists}
-        notExists={notExists}
-        key={key}
-        {...props}
-        />)
-  };
+        control={control}
+        name={props.name}
+        render={({field}) => (
+          <InputField
+            mask={mask}
+            options={options}
+            label={label}
+            type={type}
+            placeholder={placeholder}
+            required={required}
+            style={newStyle}
+            helperLink={helperLink}
+            helperText={
+              error
+                ? {key: errorMessageKey, params: [' ']}
+                : helperText
+            }
+            actions={actions}
+            exists={exists}
+            notExists={notExists}
+            key={key}
+            {...props}
+            value={field.value}
+            onChangeValue={field.onChange}
+            onBlur={field.onBlur}
+          />
+        )}
+      />);
+  }

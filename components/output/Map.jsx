@@ -1,7 +1,8 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import { StyleSheet, View } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
+import { translate } from '../../locales/i18n';
+import {getElevationStyle, getUiTokens} from '../../styles';
 
 Map.propTypes = {
   center: PropTypes.shape({
@@ -26,11 +27,25 @@ Map.propTypes = {
   style: PropTypes.object,
 };
 export default function Map ({ center, radius,centerMarker, places, style, ...props }) {
+  const tokens = getUiTokens();
+  const cardStyle = {
+    borderRadius: tokens.radii.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: tokens.colors.border,
+    backgroundColor: tokens.colors.surface,
+    ...getElevationStyle(1),
+  };
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        cardStyle,
+        style?.container,
+      ]}>
       <MapView
         customMapStyle={style?.customMapTheme || customMapStyle}
-        style={style?.wrapper || styles.map}
+        style={[styles.map, style?.wrapper]}
         initialRegion={{
           latitude: center.latitude,
           longitude: center.longitude,
@@ -38,21 +53,21 @@ export default function Map ({ center, radius,centerMarker, places, style, ...pr
           longitudeDelta: 0.05,
         }}
       >
-        {center.marker && <Marker key="_center" coordinate={center} ></Marker>}
+        {center.marker && <Marker key="_center" coordinate={center}  />}
         {places.map((place) => (
           <Marker
             key={place.id}
             coordinate={{ latitude: place.latitude, longitude: place.longitude }}
             title={translate(place.title)}
             description={translate(place.description)}
-            onPress={() => place.onPress(place)}
+            onPress={() => (typeof place.onPress === 'function' ? place.onPress(place) : null)}
           />
         ))}
-        <Circle 
-          center={center} 
-          radius={radius} 
-          strokeColor="purple" 
-          fillColor="purple" 
+        <Circle
+          center={center}
+          radius={radius}
+          strokeColor={style?.circle?.strokeColor ?? tokens.colors.primary}
+          fillColor={style?.circle?.fillColor ?? tokens.colors.primary}
         />
       </MapView>
     </View>
@@ -70,80 +85,80 @@ const styles = StyleSheet.create({
 
 const customMapStyle = [
   {
-    "elementType": "geometry",
-    "stylers": [
+    'elementType': 'geometry',
+    'stylers': [
       {
-        "color": "#FFFFFFFF"
-      }
-    ]
+        'color': '#FFFFFFFF',
+      },
+    ],
   },
   {
-    "elementType": "labels.icon",
-    "stylers": [
+    'elementType': 'labels.icon',
+    'stylers': [
       {
-        "visibility": "off"
-      }
-    ]
+        'visibility': 'off',
+      },
+    ],
   },
   {
-    "elementType": "labels.text.fill",
-    "stylers": [
+    'elementType': 'labels.text.fill',
+    'stylers': [
       {
-        "color": "#757575"
-      }
-    ]
+        'color': '#757575',
+      },
+    ],
   },
   {
-    "elementType": "labels.text.stroke",
-    "stylers": [
+    'elementType': 'labels.text.stroke',
+    'stylers': [
       {
-        "color": "#212121"
-      }
-    ]
+        'color': '#212121',
+      },
+    ],
   },
   {
-    "featureType": "administrative",
-    "elementType": "geometry.fill",
-    "stylers": [
+    'featureType': 'administrative',
+    'elementType': 'geometry.fill',
+    'stylers': [
       {
-        "color": "#757575"
-      }
-    ]
+        'color': '#757575',
+      },
+    ],
   },
   {
-    "featureType": "poi",
-    "elementType": "labels",
-    "stylers": [
+    'featureType': 'poi',
+    'elementType': 'labels',
+    'stylers': [
       {
-        "visibility": "off"
-      }
-    ]
+        'visibility': 'off',
+      },
+    ],
   },
   {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [
+    'featureType': 'road',
+    'elementType': 'geometry',
+    'stylers': [
       {
-        "color": "#2c2c2c"
-      }
-    ]
+        'color': '#2c2c2c',
+      },
+    ],
   },
   {
-    "featureType": "road",
-    "elementType": "geometry.stroke",
-    "stylers": [
+    'featureType': 'road',
+    'elementType': 'geometry.stroke',
+    'stylers': [
       {
-        "color": "#3e3e3e"
-      }
-    ]
+        'color': '#3e3e3e',
+      },
+    ],
   },
   {
-    "featureType": "water",
-    "elementType": "geometry.fill",
-    "stylers": [
+    'featureType': 'water',
+    'elementType': 'geometry.fill',
+    'stylers': [
       {
-        "color": "#0195D9FF"
-      }
-    ]
-  }
+        'color': '#0195D9FF',
+      },
+    ],
+  },
 ];

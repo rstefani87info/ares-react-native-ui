@@ -1,4 +1,4 @@
-import React, {
+import {
   useContext,
   useState,
   forwardRef,
@@ -6,46 +6,45 @@ import React, {
   memo,
   useCallback,
   useEffect,
+  useMemo,
 } from 'react';
-import {View, Text} from 'react-native';
+import {View} from 'react-native';
 
 import PropTypes from 'prop-types';
 import {useForm, FormProvider} from 'react-hook-form';
-// import {yupResolver} from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 
 import {fuseObjects} from '@ares/core/objects';
 import {convertArrayToObject} from '@ares/core/arrays';
 
-import {objectDescriptorDefinitions} from '@ares/core/dataDescriptors';
+import {format} from '@ares/core/dataDescriptors';
 
 import {aReSContext} from '@ares/react-native-ui/contexts/ARESContext';
 import Button from '@ares/react-native-ui/components/input/actions/Button';
 import TranslatedText from '@ares/react-native-ui/components/output/TranslatedText';
 import Field from './Field';
+import {getUiTokens} from '../../../styles';
 
 function initData(newData, aReS) {
   const ret = {};
-      switch (typeof newData) {
-        case 'string':
-          ret.data = JSON.parse(newData);
-          break;
-        case 'array':
-          ret.data = convertArrayToObject(newData);
-          break;
-        case 'function':
-          ret.data =  newData();
-          break;
-        case 'object':
-          ret.data = newData;
-          break;
-        default:
-          ret.data = {};
-      };
-      
-    ret.request = {body:ret.data, session:{id:'default'} };
-    ret.mapper = aReS?.datasourceMap[connectionSetting][query];
-    return ret;
+  if (typeof newData === 'string') {
+    try {
+      ret.data = JSON.parse(newData);
+    } catch {
+      ret.data = {};
+    }
+  } else if (Array.isArray(newData)) {
+    ret.data = convertArrayToObject(newData);
+  } else if (typeof newData === 'function') {
+    ret.data = newData();
+  } else if (newData && typeof newData === 'object') {
+    ret.data = newData;
+  } else {
+    ret.data = {};
+  }
+
+  ret.request = {body: ret.data, session: {id: 'default'}};
+  ret.mapper = null;
+  return ret;
 }
 
 export const Form = forwardRef(  (
@@ -70,103 +69,114 @@ export const Form = forwardRef(  (
   },
   ref,
 ) => {
-  const initializedData = initData(defaultData, aReS);
+  const tokens = getUiTokens(style?.tokens);
   const {state} = useContext(aReSContext);
   const aReS = state.aReS;
+  if (!aReS) {
+    throw new Error('Form requires ARESProvider and setConfig({ ares }) before rendering.');
+  }
+  const initializedData = initData(defaultData, aReS);
+  if (connectionSetting && query && aReS?.datasourceMap?.[connectionSetting]?.[query]) {
+    initializedData.mapper = aReS.datasourceMap[connectionSetting][query];
+  }
+  if (state?.sessionId) {
+    initializedData.request.session.id = state.sessionId;
+  }
   const [request, setRequest] = useState(initializedData.request);
   const [data, setDataNatively] = useState(initializedData.data);
   const [mapper, setMapper] = useState(initializedData.mapper);
   const [dataDescriptorMap, setDataDescriptorMap] = useState({});
-  const [validationSchema, setValidationSchema] = useState(
-    yup.object().shape({ })
-  );
-   
+
  useEffect(() => {
     const loadDataDescriptorMap = async () => {
       setDataDescriptorMap( await parametersValidationRoles(request, aReS));
     };
     loadDataDescriptorMap();
   }, [parametersValidationRoles, aReS, request]);
-  
 
-  const createRequest = dataToSend => {
+
+  const createRequest = useCallback((dataToSend) => {
     let preparedRequest = aReS.createRequest({
       body: mapParameters ? mapParameters(dataToSend) : dataToSend,
       options: {
         headers,
       },
     });
-    if (getToken) {
+    if (getToken && typeof getToken === 'function') {
       preparedRequest = {
         ...preparedRequest,
         ...getToken(aReS),
       };
+    } else if (getToken && typeof getToken === 'object') {
+      preparedRequest = {
+        ...preparedRequest,
+        ...getToken,
+      };
     }
     return preparedRequest;
-  };
+  }, [aReS, mapParameters, headers, getToken]);
 
-  const {
-    // register,
-    // unregister,
-    // formState,
-    // watch,
-    // handleSubmit,
-    reset,
-    // resetField,
-    // setError,
-    // clearErrors,
-    // setValue,
-    // setFocus,
-    // getValues,
-    // getFieldState,
-    trigger,
-    // control,
-    // Form,
-  } = useForm({
-    defaultValues: {},
-    resolver:  validationSchema,
-  });
-
-  const getYupRoles = useCallback( () => {
-    const roles = {};
-    Object.keys(dataDescriptorMap??{}).forEach(key => {
-      roles[key] = yup
-        .string()
-        .test(
-          'form.field.' + key,
-          aReS.locale.values['form.field.' + key],
-          value =>
-            objectDescriptorDefinitions[key](value, dataDescriptorMap[key]),
-        );
-    });
-    setValidation(roles);
-    return roles;
-  }, [dataDescriptorMap, aReS]);
-
-  const setValidation = useCallback( (roles) => {
-    setValidationSchema( yup.object().shape(roles));
-  }, []);
-
-  const setData = useCallback(
-    async (newData, validate) => {
-      const ret =  initData(newData, validate);
-      if (ret) {
-        setDataNatively(ret.data);
-        setRequest(ret.request);
-        reset(ret.data);
-        getYupRoles();
-        if (validate) {
-          await trigger();
+  const resolver = useCallback(
+    async values => {
+      const reqLike = {
+        ...(values ?? {}),
+        body: values ?? {},
+        parameters: values ?? {},
+        query: values ?? {},
+        session: request?.session,
+      };
+      const formatted = await format(reqLike, dataDescriptorMap ?? {}, null);
+      const errors = {};
+      const resolvedValues = {};
+      for (const k of Object.keys(dataDescriptorMap ?? {})) {
+        resolvedValues[k] = formatted[k];
+        if (formatted?.['€rror']?.[k]?.length) {
+          const descriptorMessageKey = dataDescriptorMap?.[k]?.error_message;
+          const fallbackType = formatted['€rror'][k][0] ?? 'default';
+          const fallbackKey = `ares.form.validation.${fallbackType}`;
+          errors[k] = {
+            type: formatted['€rror'][k][0],
+            message: descriptorMessageKey ?? fallbackKey,
+          };
         }
-        setDataDescriptorMap(ret.dataDescriptorMap, aReS);
-        setMapper( ret.mapper);
       }
-      return ret;
+      return {
+        values: resolvedValues,
+        errors,
+      };
     },
-    [ reset, trigger,setDataNatively,  setRequest, createRequest, getYupRoles, setDataDescriptorMap, parametersValidationRoles, setMapper]
+    [dataDescriptorMap, request?.session],
   );
 
-  const handleSubmitCallback = async dataToSend => {
+  const methods = useForm({
+    defaultValues: data ?? {},
+    resolver,
+    mode: 'onChange',
+  });
+  const {handleSubmit, reset, trigger, setError, clearErrors, formState} = methods;
+
+  const setData = useCallback(
+    async (newData, validate = false) => {
+      const next = initData(newData, aReS);
+      setDataNatively(next.data);
+      const preparedRequest = createRequest(next.data);
+      if (state?.sessionId) {
+        preparedRequest.session = {id: state.sessionId};
+      }
+      setRequest(preparedRequest);
+      reset(next.data);
+      if (validate) {
+        await trigger();
+      }
+      if (connectionSetting && query && aReS?.datasourceMap?.[connectionSetting]?.[query]) {
+        setMapper(aReS.datasourceMap[connectionSetting][query]);
+      }
+      return {data: next.data, request: preparedRequest};
+    },
+    [aReS, state?.sessionId, reset, trigger, createRequest, connectionSetting, query],
+  );
+
+  const handleSubmitCallback = useCallback(async (dataToSend) => {
     let preparedRequest = createRequest(dataToSend);
     setRequest(preparedRequest);
     const isJWTSensible = mapper?.isJWTSensible && getToken;
@@ -181,56 +191,78 @@ export const Form = forwardRef(  (
         ...getToken,
       };
     }
-    let response = await mapper.execute(preparedRequest);
+    clearErrors('root');
+    let response = null;
+    try {
+      if (mapper?.execute) {
+        response = await mapper.execute(preparedRequest);
+      }
+    } catch (e) {
+      setError('root', {
+        type: 'submit',
+        message: 'ares.form.validation.submit',
+      });
+      throw e;
+    }
     if (mapResults) {
       response = mapResults(response);
     }
     if (onSubmit) {
       onSubmit(dataToSend);
     }
-  };
+    return response;
+  }, [aReS, clearErrors, createRequest, getToken, mapper, mapResults, onSubmit, setError]);
 
-  const submit =  { text: 'ares.submit'};
-  actions = {
-    ...actions,
-  };
+  const computedActions = useMemo(() => {
+    const next = {
+      ...(actions || {}),
+    };
+    next.submit = next.submit || {text: 'ares.submit'};
+    next.submit.handler = handleSubmit(next.submit.handler || handleSubmitCallback);
+    next.submit.positionIndex = 1000;
+    return next;
+  }, [actions, handleSubmit, handleSubmitCallback]);
 
-  if(!actions.submit) {
-    actions.submit = submit;
-  }
-  if(!actions.submit.handler) {
-    actions.submit.handler = handleSubmitCallback;
-  }
-  actions.submit.positionIndex = 1000;
-
-  Object.keys(actions).forEach(ak=>{
-    actions[ak] = useCallback(actions[ak]);
-  });
-  
 
 
   const wrapperStyle = style?.wrapper;
-  const titleStyle = style?.title ?? {fontSize: 20, fontWeight: 'bold', marginBottom: 10};
+  const defaultWrapperStyle = {flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.md, padding: tokens.spacing.md};
+  const titleStyle = style?.title ?? {fontSize: tokens.typography.size.xl, fontWeight: tokens.typography.weight.bold, color: tokens.colors.text, marginBottom: tokens.spacing.xs};
   const descriptionStyle = [
-    style?.description ?? {fontSize: 16, marginBottom: 10},
+    style?.description ?? {fontSize: tokens.typography.size.md, color: tokens.colors.textMuted, marginBottom: tokens.spacing.md},
   ];
   const formFieldStyle = style?.fieldSetting ?? {};
-  const formActionStyle = /*style?.actionSetting ?? */{
-    wrapper:{backgroundColor: 'silver', paddingLeft: 10, paddingRight: 10 , paddingTop: 5, paddingBottom: 5, borderRadius: 10, margin: 10, borderColor: 'gray', borderWidth: 1, alignItems: 'center', justifyContent: 'center'},
-text:{fontSize: 16, fontWeight: 'bold', color: 'black'}}; 
- 
+  const formActionStyle = style?.actionSetting ?? {
+    wrapper: {
+      borderRadius: tokens.radii.md,
+      backgroundColor: tokens.colors.surface,
+      borderWidth: 1,
+      borderColor: tokens.colors.border,
+      paddingVertical: tokens.spacing.sm,
+      paddingHorizontal: tokens.spacing.md,
+      marginTop: tokens.spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    wrapperOnPress: {backgroundColor: tokens.colors.surface2},
+    text: {fontSize: tokens.typography.size.md, fontWeight: tokens.typography.weight.semibold, color: tokens.colors.text},
+  };
+
   useImperativeHandle(ref, () => ({
     data,
     setData,
     request,
   }));
   return (
-    <View ref={ref} style={wrapperStyle ?? {flexDirection: 'row', flexWrap: 'wrap'}}>
-      <FormProvider>
+    <View
+      ref={ref}
+      style={wrapperStyle ?? defaultWrapperStyle}>
+      <FormProvider {...methods}>
         <TranslatedText style={titleStyle} text={title}/>
         <TranslatedText style={descriptionStyle} text={description}/>
           <ShowFields dataDescriptorMap={dataDescriptorMap} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} />
-          <ShowActions actions={actions} formActionStyle={formActionStyle} />
+          <ShowErrors tokens={tokens} dataDescriptorMap={dataDescriptorMap} errors={formState?.errors} formName={name} />
+          <ShowActions actions={computedActions} formActionStyle={formActionStyle} />
       </FormProvider>
     </View>
   );
@@ -262,14 +294,45 @@ export default memo(Form);
 
 
 function ShowFields({dataDescriptorMap, formFieldStyle, formActionStyle}){
-  return Object.keys(dataDescriptorMap??{})
+  return Object.keys(dataDescriptorMap ?? {})
     .sort((k1, k2) => {
       return (dataDescriptorMap[k1]?.positionIndex ?? 0) - (dataDescriptorMap[k2]?.positionIndex ?? 0);
     })
     .map(k => {
-      if(!dataDescriptorMap[k].id) dataDescriptorMap[k].id=k;
-      if(!dataDescriptorMap[k].name) dataDescriptorMap[k].name=k;
-      return(<Field key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />)});
+      if(!dataDescriptorMap[k].id) {dataDescriptorMap[k].id = k;}
+      if(!dataDescriptorMap[k].name) {dataDescriptorMap[k].name = k;}
+      return(<Field key={k} formFieldStyle={formFieldStyle} formActionStyle={formActionStyle} {...dataDescriptorMap[k]} />);});
+}
+
+function ShowErrors({tokens, dataDescriptorMap, errors, formName}){
+  const fullWidthStyle = {minWidth: '100%'};
+  const entries = Object.entries(errors ?? {}).filter(([k]) => k !== 'root');
+  const rootError = errors?.root;
+  if (entries.length === 0 && !rootError) {
+    return null;
+  }
+  const rootMessageKey = rootError?.message ?? 'ares.form.validation.submit';
+  return (
+    <View style={fullWidthStyle}>
+      {rootError ? (
+        <TranslatedText
+          style={{color: tokens?.colors?.danger ?? 'red'}}
+          text={{key: rootMessageKey, params: [formName ?? 'form']}}
+        />
+      ) : null}
+      {entries.map(([fieldName, err]) => {
+        const descriptorMessageKey = dataDescriptorMap?.[fieldName]?.error_message;
+        const messageKey = descriptorMessageKey ?? err?.message ?? `ares.form.validation.${err?.type ?? 'default'}`;
+        return (
+          <TranslatedText
+            key={fieldName}
+            style={{color: tokens?.colors?.danger ?? 'red'}}
+            text={{key: messageKey, params: [fieldName]}}
+          />
+        );
+      })}
+    </View>
+  );
 }
 
 function ShowActions({actions, style, formActionStyle}){
@@ -293,6 +356,6 @@ function ShowActions({actions, style, formActionStyle}){
         text={actions[k].text}
         onPress={actions[k].handler}
         style={actSyle}
-      />
+      />;
     });
 }

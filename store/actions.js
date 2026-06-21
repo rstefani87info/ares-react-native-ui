@@ -3,15 +3,15 @@ export const fetchDataRequest = (fetchFunction, organizeFunction, key, refreshRa
     fetchFunction,
     organizeFunction,
     key,
-    refreshRate
+    refreshRate,
   });
-  
+
   export const fetchDataSuccess = (key, data) => ({
     type: 'FETCH_DATA_SUCCESS',
-    payload: { key, data }
+    payload: { key, data },
   });
-  
+
   export const fetchDataFailure = (error) => ({
     type: 'FETCH_DATA_FAILURE',
-    error
+    error,
   });

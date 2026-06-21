@@ -1,5 +1,3 @@
-import LinearGradient from 'react-native-linear-gradient';
- 
 export const arrays = {
 white : [255, 255, 255],
 black : [0, 0, 0],
@@ -161,33 +159,33 @@ export class Color {
     this.name = name;
   }
   static parseRGBA(color) {
-    if (!color || typeof color !== 'string') throw new Error("Invalid color input");
+    if (!color || typeof color !== 'string') {throw new Error('Invalid color input');}
     const matches = /\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(\s*,\s*(\d+(\.\d+)?))\s*/i.exec(color);
     return (matches
-      ? 
+      ?
           Color.getFromRGBArray( [parseInt(matches[1], 10),
            parseInt(matches[2], 10),
            parseInt(matches[3], 10),
            matches[4] ? parseFloat(matches[5]) : 1] )
-        
+
       : null);
   }
-  
+
   static parseHex(color) {
-    if (!color || typeof color !== 'string') throw new Error("Invalid color input");
+    if (!color || typeof color !== 'string') {throw new Error('Invalid color input');}
     const matches = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2}){0,1}$/i.exec(color);
     return matches
       ?  Color.getFromRGBArray(
           [parseInt(matches[1], 16),
           parseInt(matches[2], 16),
           parseInt(matches[3], 16),
-          parseInt(matches[4], 16)/255]
+          parseInt(matches[4], 16) / 255]
         )
       : null;
   }
 
   static parseByName(color) {
-    if (!color || typeof color !== 'string') throw new Error("Invalid color input");
+    if (!color || typeof color !== 'string') {throw new Error('Invalid color input');}
     color = color.toLowerCase().replace(/\W|_/g, '');
     if(!instances[color] && arrays[color]){
       instances[color] = Color.getFromRGBArray(arrays[color]);
@@ -196,38 +194,38 @@ export class Color {
     return instances[color];
   }
   static parseColor(color){
-    return Color.parseByName(color)??Color.parseHex(color)??Color.parseRGBA(color);
+    return Color.parseByName(color) ?? Color.parseHex(color) ?? Color.parseRGBA(color);
   }
   static getFromRGBArray(array) {
     const [r, g, b, a] = array;
     const name = Object.keys(arrays).find((key) => arrays[key].join(',') === [r,g,b].join(','));
-    return new Color(parseInt(r, 10), parseInt(g, 10), parseInt(b,10), parseFloat(a??1, 10), name); 
+    return new Color(parseInt(r, 10), parseInt(g, 10), parseInt(b,10), parseFloat(a ?? 1, 10), name);
   }
   getLighter(step = 55) {
-    if(step === 0) return Color.getFromRGBArray([this.r, this.g, this.b, this.a]);
+    if(step === 0) {return Color.getFromRGBArray([this.r, this.g, this.b, this.a]);}
     if (step < 0) {step = step * -1;}
     return Color.getFromRGBArray([
       this.r + step >= 255 ? 255 : this.r + step,
       this.g + step >= 255 ? 255 : this.g + step,
       this.b + step >= 255 ? 255 : this.b + step,
-      this.a 
+      this.a,
     ]);
   }
 
   getDarker(step = 55) {
-    if(step === 0) return Color.getFromRGBArray([this.r, this.g, this.b, this.a]);
+    if(step === 0) {return Color.getFromRGBArray([this.r, this.g, this.b, this.a]);}
     if (step < 0) {step = step * -1;}
     return Color.getFromRGBArray([
       this.r - step <= 0 ? 0 : this.r - step,
       this.g - step <= 0 ? 0 : this.g - step,
       this.b - step <= 0 ? 0 : this.b - step,
-      this.a
+      this.a,
     ]);
   }
 
   getBrighter(step = 55) {
-    if (step < 0) 
-     return this.getDarker(step*-1);
+    if (step < 0)
+     {return this.getDarker(step * -1);}
     return this.getLighter(step);
   }
 
@@ -248,13 +246,13 @@ export class Color {
   }
 
   toString() {
-    return this.convertCSSRGBAColor
+    return this.convertCSSRGBAColor;
   }
 
   getShade(step = 25.5) {
     return new Shade(this, step);
   }
-   
+
 }
 
 
@@ -275,77 +273,40 @@ export class Shade{
     this.black = instances.black;
   }
 
-  toCSSGradient(direction, percentages = [0,-1, -1, -1, -1, -1, 50, -1, -1, -1, -1, 100]) {  
+  toCSSGradient(direction, percentages = [0,-1, -1, -1, -1, -1, 50, -1, -1, -1, -1, 100]) {
     const shadeColors = [
-        "black",
-        "nextToblack",
-        "darkest",
-        "darker",
-        "dark",
-        "middle",
-        "light",
-        "lighter",
-        "lightest",
-        "nextTowhite",
-        "white",
+        'black',
+        'nextToblack',
+        'darkest',
+        'darker',
+        'dark',
+        'middle',
+        'light',
+        'lighter',
+        'lightest',
+        'nextTowhite',
+        'white',
     ];
     let newArray = new Array(101);
     if (Array.isArray(percentages)) {
         percentages.forEach((percentage, index) => {
-            if (0 <= percentage) {
+            if (percentage >= 0) {
                 newArray[percentage] = `${shadeColors[index].convertRGBAToCSSColor()} ${percentage}%`;
             }
         });
-    } else if (typeof percentages === "object") {
+    } else if (typeof percentages === 'object') {
         Object.keys(percentages).forEach((key, index) => {
             newArray[percentages[key]] = `${shadeColors[index].convertRGBAToCSSColor()} ${percentages[key]}%`;
         });
     }
-    return `linear-gradient(${direction}, ${newArray.filter(x => x).join(", ")})`;
+    return `linear-gradient(${direction}, ${newArray.filter(x => x).join(', ')})`;
 }
 
-  toReactNativeGradientComponent(direction,style,percentages=[0,-1,-1,-1,-1,-1,50,-1,-1,-1,-1,100],content, ...props) {
-    const shadeColors = [
-      "black",
-      "nextToblack",
-      "darkest",
-      "darker",
-      "dark",
-      "middle",
-      "light",
-      "lighter",
-      "lightest",
-      "nextTowhite",
-      "white",
-  ];
-    let newArray = new Array(101);
-    if(Array.isArray(percentages)) {
-      percentages.forEach((percentage, index) => {
-        if( 0 <= percentage) {newArray[percentage]=shadeColors[index].toString();}
-      })
-    }else if(typeof percentages === "object") {
-      Object.keys(percentages).forEach((key, index) => {
-        newArray[percentages[key]] = shadeColors[index].toString();
-      });
-    }
-    return (
-      <LinearGradient
-        colors={newArray.filter(x => x)}
-        locations={newArray.map((x, index) => index ).filter(x => newArray[x]).map(x => x / 100)} 
-        start={direction.start}
-        end={direction.end}
-        style={[style.wrapper,{ flex: 1 }]}
-        {...props}
-      >
-        {{content}}
-      </LinearGradient>
-    );
-  }
 }
 
 export const instances = {};
 export const shades = {};
 Object.keys(arrays).forEach((k) => {
   const c = Color.parseByName(k);
-  shades[k] = c.getShade(k)
+  shades[k] = c.getShade(k);
 });

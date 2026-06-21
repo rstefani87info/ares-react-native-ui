@@ -1,19 +1,25 @@
+import { config } from '../../../config';
+
 export function Debug({children}) {
-    console.debug(children)
-    return null
+    if (config.logger?.debug) {
+        config.logger.debug(children);
+    } else {
+        config.logger?.log?.(children);
+    }
+    return null;
 }
 
 export function Error({children}) {
-    console.error(children)
-    return null
+    config.logger?.error?.(children);
+    return null;
 }
 
 export function Log({children}) {
-    console.log(children)
-    return null
+    config.logger?.log?.(children);
+    return null;
 }
 
 export function Warn({children}) {
-    console.warn(children)
-    return null
+    config.logger?.warn?.(children);
+    return null;
 }
