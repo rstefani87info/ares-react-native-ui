@@ -53,3 +53,41 @@ export async function getLocation() {
     );
   });
 }
+
+export async function watchLocation(
+  onLocation,
+  onError,
+  options = {},
+) {
+  const hasPermission = await requestLocationPermission();
+  if (!hasPermission) {
+    return null;
+  }
+
+  return Geolocation.watchPosition(
+    position => {
+      const {latitude, longitude} = position.coords;
+      onLocation?.({latitude, longitude, position});
+    },
+    error => {
+      config.logger?.error?.(error?.message ?? String(error));
+      onError?.(error);
+    },
+    {
+      enableHighAccuracy: true,
+      distanceFilter: 0,
+      interval: 5000,
+      fastestInterval: 2000,
+      showLocationDialog: true,
+      forceRequestLocation: true,
+      ...options,
+    },
+  );
+}
+
+export function clearLocationWatch(watchId) {
+  if (watchId === null || watchId === undefined) {
+    return;
+  }
+  Geolocation.clearWatch(watchId);
+}

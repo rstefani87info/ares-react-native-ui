@@ -14,7 +14,7 @@ const Google = {
       androidClientId: settings?.android?.client?.id,
       webClientId: settings?.web?.client?.id,
       offlineAccess: settings?.offlineAccess ?? true,
-      redirectUri: settings[Platform.OS].redirectUri,
+      redirectUri: settings?.[Platform.OS]?.redirectUri,
       apiKey: settings?.apiKey,
     });
 

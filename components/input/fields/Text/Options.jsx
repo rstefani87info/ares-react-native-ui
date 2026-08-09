@@ -5,8 +5,9 @@ import Button from '../../actions/Button';
 import TranslatedText from '../../../output/TranslatedText';
 import { isPrimitive } from '@ares/core/scripts';
 import { getElevationStyle, getUiTokens } from '../../../../styles';
+import useLocales from '../../../../locales/useLocales';
 
-const {width, height} = Dimensions.get('screen');
+const {height} = Dimensions.get('screen');
 
 export default function Options({
     options,
@@ -27,20 +28,20 @@ export default function Options({
       wrapper: {
         paddingVertical: tokens.spacing.sm,
         paddingHorizontal: tokens.spacing.md,
-        borderRadius: tokens.radii.md,
         backgroundColor: tokens.colors.surface,
         borderWidth: 1,
         borderColor: tokens.colors.border,
         alignItems: 'flex-start',
-        justifyContent: 'center',
+        justifyContent: 'start',
+        width:'99%',
         ...getElevationStyle(0),
       },
       wrapperOnPress: {backgroundColor: tokens.colors.surface2},
-      text: {color: tokens.colors.text, fontSize: tokens.typography.size.md, fontWeight: tokens.typography.weight.medium},
+      text: {width:'99%', textAlign: 'left', color: tokens.colors.text, fontSize: (tokens.typography.size.xs - 3), fontWeight: tokens.typography.weight.medium},
       textOnPress: {color: tokens.colors.text},
     }), [tokens]);
 
-    const renderedOptions = useMemo(() => {
+    const convertedOptions = useMemo(() => {
       const ret = options
         ?.filter(o => !o?.hidden && (!hideSelected || !o?.selected))
         .map(o => (
@@ -69,17 +70,28 @@ export default function Options({
           />
         );
       }
+
       return ret;
-    }, [options, hideSelected, getOptionValue, getOptionText, getOptionIcon, onOptionPress, style?.option, style?.options?.disabled, multiple, baseOptionStyle, tokens]);
+    }, [
+      options,
+      hideSelected,
+      getOptionValue,
+      getOptionText,
+      getOptionIcon,
+      onOptionPress,
+      style?.option,
+      style?.options?.disabled,
+      multiple,
+      baseOptionStyle,
+      tokens,
+    ]);
 
     const scrollViewBaseStyle = {
       flexDirection: 'column',
       maxHeight: height * 0.35,
-      width: width * 0.92,
+      width: '97%',
       overflow: 'hidden',
       borderRadius: tokens.radii.lg,
-      borderWidth: 1,
-      borderColor: tokens.colors.border,
       backgroundColor: tokens.colors.surface,
       ...getElevationStyle(2),
     };
@@ -110,7 +122,7 @@ export default function Options({
                     style?.scrollViewContent,
                   ]}>
                 {
-                    renderedOptions
+                    convertedOptions
                 }
             </ScrollView>
         // </Modal>
@@ -118,9 +130,10 @@ export default function Options({
 }
 
 export function Option({ option, multiple = false, options, style, getOptionValue, getOptionText, getOptionIcon, onOptionPress,  ...props }) {
-    const optionInOptions = options?.find(o1 => getOptionValue(o1) === getOptionValue(option));
+  const {translate} = useLocales();
+  const optionInOptions = options?.find(o1 => getOptionValue(o1) === getOptionValue(option));
     return <Button
-        text={getOptionText(option)}
+        text={getOptionText(option,null,translate)}
         icon={getOptionIcon(option)}
         onPress={() => {
         if (!multiple && !option.selected) {

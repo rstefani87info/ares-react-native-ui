@@ -43,6 +43,11 @@ jest.mock('react-native-modal', () => {
   return ({children}) => React.createElement(React.Fragment, null, children);
 });
 
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => {
+  const React = require('react');
+  return ({children, ...props}) => React.createElement('Icon', props, children);
+});
+
 jest.mock('react-native-device-info', () => ({
   getUniqueId: jest.fn(() => Promise.resolve('device-id')),
 }));

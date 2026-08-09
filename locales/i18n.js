@@ -25,7 +25,7 @@ function getCountryCode() {
   return String(config.locales?.countryCode ?? 'US').toUpperCase();
 }
 
-const defaultCountry = countries[getCountryCode()] || countries.US;
+export const defaultCountry = countries[getCountryCode()] || countries.US;
 config.locales = config.locales || {};
 if (defaultCountry?.defaultLanguage && !config.locales.currentLanguage) {
   const deviceTag = Localize.getLocales?.()?.[0]?.languageTag;
@@ -76,7 +76,7 @@ export function setCurrentLanguage(language){
   }
 }
 
-export function translate(key, country = defaultCountry, language) {
+export function translate(key, country = defaultCountry, language = null) {
 
   if(country && !language) {
     language = country.defaultLanguage;

@@ -1,6 +1,5 @@
-import { createContext, useReducer, useEffect } from 'react';
+import { createContext, useReducer, useEffect, useRef } from 'react';
 import * as crypto from '@ares/core/crypto';
-import DeviceInfo from 'react-native-device-info';
 import { config } from '../config';
 
 const initialState = {
@@ -40,35 +39,54 @@ function ARESReducer(state, action) {
 
 export function ARESProvider  ({ children }) {
     const [state, dispatch] = useReducer(ARESReducer, initialState);
+    const mountedRef = useRef(true);
 
     const fetchDatasources = async () => {
         const aReS = config.ares;
         if (!aReS) {
             const message = 'ARES instance not configured in @ares/react-native-ui. Call setConfig({ ares }) before rendering.';
             config.logger?.error?.(message);
-            dispatch({ type: 'SET_ERROR', payload: message });
+            if (mountedRef.current) {
+                dispatch({ type: 'SET_ERROR', payload: message });
+            }
             return;
         }
         try {
             await aReS.initAllDatasources(aReS.datasourceListToBeInstalled);
-            dispatch({ type: 'FETCH_DATASOURCES', payload: aReS.datasourceMap });
+            if (mountedRef.current) {
+                dispatch({ type: 'FETCH_DATASOURCES', payload: aReS.datasourceMap });
+            }
         } catch (error) {
             config.logger?.error?.('ARESProvider fetchDatasources error:', error);
-            dispatch({ type: 'SET_ERROR', payload: error?.message ?? 'Unknown error' });
+            if (mountedRef.current) {
+                dispatch({ type: 'SET_ERROR', payload: error?.message ?? 'Unknown error' });
+            }
         }
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchDatasources();
         const setSessionID = async () => {
             try {
-                const sessionId = crypto.getUniqueId(await DeviceInfo.getUniqueId());
-                dispatch({ type: 'SET_SESSION_ID', payload: sessionId });
+                let uniqueId = null;
+                try {
+                    const mod = require('react-native-device-info');
+                    const DeviceInfo = mod?.default ?? mod;
+                    uniqueId = await DeviceInfo.getUniqueId();
+                } catch {}
+                const sessionId = crypto.getUniqueId(uniqueId ?? String(Date.now()));
+                if (mountedRef.current) {
+                    dispatch({ type: 'SET_SESSION_ID', payload: sessionId });
+                }
             } catch (error) {
                 config.logger?.error?.('ARESProvider sessionId error:', error);
             }
         };
         setSessionID();
+        return () => {
+            mountedRef.current = false;
+        };
     }, []);
 
     return (

@@ -8,21 +8,21 @@ import {
   forwardRef,
   useCallback,
 } from 'react';
-import {
-  View,
-} from 'react-native';
+import { View } from 'react-native';
 
 import ReactNativeModal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {TextInput} from 'react-native-gesture-handler';
+import { TextInput } from 'react-native-gesture-handler';
 import PropTypes from 'prop-types';
 
 import Button from '@ares/react-native-ui/components/input/actions/Button';
-import {isPrimitive} from '@ares/core/scripts';
-import {fuseObjects} from '@ares/core/objects';
+import { isDynamicArray } from '@ares/core/arrays.js';
+import { isPrimitive } from '@ares/core/scripts';
+import { fuseObjects } from '@ares/core/objects';
+import Loading from '../../../output/Loading.jsx';
 import Options from './Options';
-import {getElevationStyle, getUiTokens} from '../../../../styles';
-
+import { getElevationStyle, getUiTokens } from '../../../../styles';
+import useLocales from '../../../../locales/useLocales';
 
 function normalizeOptions(options) {
   if (typeof options === 'string') {
@@ -33,35 +33,55 @@ function normalizeOptions(options) {
     }
   }
 
-  if (!options) {return [];}
-  if (Array.isArray(options)) {return options;}
+  if (!options) {
+    return [];
+  }
+  if (Array.isArray(options)) {
+    return options;
+  }
+  // Dynamic arrays are resolved asynchronously via toArray().
+  if (isDynamicOptionsSource(options)) {
+    return [];
+  }
 
   if (typeof options?.[Symbol.iterator] === 'function') {
     return Array.from(options);
   }
 
   if (typeof options === 'object') {
-    return Object.keys(options).map(k => ({value: k, text: options[k]}));
+    return Object.keys(options).map((k) => ({ value: k, text: options[k] }));
   }
 
   return [];
 }
 
 function isDynamicOptionsSource(options) {
-  return Boolean(options && typeof options.toArray === 'function');
+  return isDynamicArray(options);
 }
 
 function areArraysShallowEqual(left, right) {
-  if (left === right) {return true;}
-  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+  if (left === right) {
+    return true;
+  }
+  if (
+    !Array.isArray(left) ||
+    !Array.isArray(right) ||
+    left.length !== right.length
+  ) {
     return false;
   }
   return left.every((value, index) => value === right[index]);
 }
 
 function areOptionListsEqual(left, right, getOptionValue) {
-  if (left === right) {return true;}
-  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+  if (left === right) {
+    return true;
+  }
+  if (
+    !Array.isArray(left) ||
+    !Array.isArray(right) ||
+    left.length !== right.length
+  ) {
     return false;
   }
   return left.every((option, index) => {
@@ -97,20 +117,25 @@ const Text = forwardRef(
       onLongPress,
       onLayout,
       options = [],
-      getOptionValue,
-      getOptionText,
-      getOptionIcon,
+      getOptionValue = (o) => (isPrimitive(o) ? o : o.value),
+      getOptionText = (o) => (isPrimitive(o) ? o : o.text ?? o.name),
+      getOptionIcon = (o) =>
+        isPrimitive(o) ? null : o.icon ?? o.image ?? null,
       addOption = true,
-      sortOptions,
+      sortOptions = null,
       distinct = false,
       showOptionList = true,
       ignoreCase = true,
       multiple = false,
+      dynamicOptionsDelay = 300,
       ...props
     },
     ref,
   ) => {
     id = id ?? name;
+    const {translate} = useLocales();
+    sortOptions = sortOptions ?? ((a, b) =>
+        getOptionText(a, translate)?.localeCompare(getOptionText(b, translate)) ?? -1);
     const tokens = useMemo(() => getUiTokens(style?.tokens), [style?.tokens]);
     const defaultStyle = useMemo(() => {
       const rowBase = {
@@ -151,8 +176,11 @@ const Text = forwardRef(
           borderColor: tokens.colors.border,
           backgroundColor: tokens.colors.surface,
         },
-        wrapperOnPress: {backgroundColor: tokens.colors.surface2},
-        text: {color: tokens.colors.danger, fontWeight: tokens.typography.weight.bold},
+        wrapperOnPress: { backgroundColor: tokens.colors.surface2 },
+        text: {
+          color: tokens.colors.danger,
+          fontWeight: tokens.typography.weight.bold,
+        },
       };
       const addButton = {
         wrapper: {
@@ -165,10 +193,18 @@ const Text = forwardRef(
           backgroundColor: tokens.colors.primary,
           ...getElevationStyle(1),
         },
-        wrapperOnPress: {backgroundColor: tokens.colors.primary},
-        text: {color: tokens.colors.onPrimary, fontSize: tokens.typography.size.lg, fontWeight: tokens.typography.weight.bold},
+        wrapperOnPress: { backgroundColor: tokens.colors.primary },
+        text: {
+          color: tokens.colors.onPrimary,
+          fontSize: tokens.typography.size.lg,
+          fontWeight: tokens.typography.weight.bold,
+        },
       };
-      const modalBackdrop = {justifyContent: 'center', alignItems: 'center', padding: tokens.spacing.lg};
+      const modalBackdrop = {
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: tokens.spacing.lg,
+      };
       const modalCard = {
         width: '100%',
         maxWidth: 520,
@@ -179,7 +215,7 @@ const Text = forwardRef(
         overflow: 'hidden',
         ...getElevationStyle(2),
       };
-      const modalRow = {flexDirection: 'row', alignItems: 'center'};
+      const modalRow = { flexDirection: 'row', alignItems: 'center' };
       const textInput = {
         flex: 1,
         minHeight: 46,
@@ -191,7 +227,7 @@ const Text = forwardRef(
       return {
         input: inputContainer,
         row: rowBase,
-        display: {wrapper: displayWrapper, text: displayText},
+        display: { wrapper: displayWrapper, text: displayText },
         cancelButton,
         addButton,
         modalBackdrop,
@@ -201,28 +237,16 @@ const Text = forwardRef(
       };
     }, [tokens]);
 
-    const resolvedStyle = useMemo(() => fuseObjects(defaultStyle, style ?? {}), [defaultStyle, style]);
-    const resolvedGetOptionValue = useCallback(
-      getOptionValue ?? (o => (isPrimitive(o) ? o : o.value)),
-      [getOptionValue],
-    );
-    const resolvedGetOptionText = useCallback(
-      getOptionText ?? (o => (isPrimitive(o) ? o : o.text)),
-      [getOptionText],
-    );
-    const resolvedGetOptionIcon = useCallback(
-      getOptionIcon ?? (o => (isPrimitive(o) ? null : (o.icon ?? o.image ?? null))),
-      [getOptionIcon],
-    );
-    const resolvedSortOptions = useCallback(
-      sortOptions ?? ((a, b) => resolvedGetOptionText(a)?.localeCompare(resolvedGetOptionText(b)) ?? -1),
-      [sortOptions, resolvedGetOptionText],
+    const resolvedStyle = useMemo(
+      () => fuseObjects(defaultStyle, style ?? {}),
+      [defaultStyle, style],
     );
     const [realValues, setRealValues] = useState(['']);
     const [values, setValues] = useState(['']);
     const [optionsVisible, setOptionsVisible] = useState(false);
     const [optionsOverride, setOptionsOverride] = useState(null);
     const [resolvedDynamicOptions, setResolvedDynamicOptions] = useState(null);
+    const [loadingDynamicOptions, setLoadingDynamicOptions] = useState(false);
     const currentOptionsSource = optionsOverride ?? options;
     const optionList = useMemo(() => {
       if (resolvedDynamicOptions !== null) {
@@ -233,22 +257,34 @@ const Text = forwardRef(
 
     const [focusedIndex, setFocusedIndex] = useState(null);
 
-      addOption =
+    addOption =
       addOption === true
-      ? {
-        byText: text => ({text, value: text}),
-        byValue: value => ({value, text: value}),
+        ? {
+            byText: (text) => ({ text, value: text }),
+            byValue: (value) => ({ value, text: value }),
           }
         : addOption;
-    const getValueForComparison = useCallback((value) => {
-      const next = value ?? '';
-      if (ignoreCase && next?.toLowerCase) {
-        return String(next).toLowerCase();
-      }
-      return value;
-    }, [ignoreCase]);
+    const getValueForComparison = useCallback(
+      (value) => {
+        const next = value ?? '';
+        if (ignoreCase && next?.toLowerCase) {
+          return String(next).toLowerCase();
+        }
+        return value;
+      },
+      [ignoreCase],
+    );
 
     const textRef = useRef([]);
+    const dynamicRequestSequenceRef = useRef(0);
+    const dynamicOptionsTimeoutRef = useRef(null);
+
+    const clearPendingDynamicOptionsRefresh = useCallback(() => {
+      if (dynamicOptionsTimeoutRef.current) {
+        clearTimeout(dynamicOptionsTimeoutRef.current);
+        dynamicOptionsTimeoutRef.current = null;
+      }
+    }, []);
 
     useEffect(() => {
       textRef.current = textRef.current.slice(0, values.length);
@@ -258,6 +294,12 @@ const Text = forwardRef(
     }, [values]);
 
     useEffect(() => {
+      clearPendingDynamicOptionsRefresh();
+      setResolvedDynamicOptions(null);
+      setLoadingDynamicOptions(false);
+    }, [currentOptionsSource, clearPendingDynamicOptionsRefresh]);
+
+    useEffect(() => {
       if (controlledValue === undefined) {
         return;
       }
@@ -265,57 +307,61 @@ const Text = forwardRef(
         ? Array.isArray(controlledValue)
           ? controlledValue
           : controlledValue == null
-            ? ['']
-            : [controlledValue]
+          ? ['']
+          : [controlledValue]
         : [controlledValue ?? ''];
-      const nextRealValues = inputValues.map(v =>
-        v && typeof v === 'object' ? (v.value ?? v.text ?? '') : v,
+      const nextRealValues = inputValues.map((v) =>
+        v && typeof v === 'object' ? v.value ?? v.text ?? '' : v,
       );
-      const nextValues = nextRealValues.map(rv => {
-        const option = (optionList ?? []).find(o => resolvedGetOptionValue(o) === rv);
-        return option ? resolvedGetOptionText(option) : rv;
+      const nextValues = nextRealValues.map((rv) => {
+        const option = (optionList ?? []).find((o) => getOptionValue(o) === rv);
+        return option ? getOptionText(option,null,translate) : rv;
       });
-      const normalizedRealValues = nextRealValues.length ? nextRealValues : [''];
-      const normalizedValues = nextValues.length
-        ? nextValues.map(v => (v == null ? '' : String(v)))
+      const normalizedRealValues = nextRealValues.length
+        ? nextRealValues
         : [''];
-      setRealValues(prev =>
-        areArraysShallowEqual(prev, normalizedRealValues) ? prev : normalizedRealValues,
+      const normalizedValues = nextValues.length
+        ? nextValues.map((v) => (v == null ? '' : String(v)))
+        : [''];
+      setRealValues((prev) =>
+        areArraysShallowEqual(prev, normalizedRealValues)
+          ? prev
+          : normalizedRealValues,
       );
-      setValues(prev =>
+      setValues((prev) =>
         areArraysShallowEqual(prev, normalizedValues) ? prev : normalizedValues,
       );
-    }, [controlledValue, multiple, optionList, resolvedGetOptionValue, resolvedGetOptionText]);
-
+    }, [controlledValue, multiple, optionList, getOptionValue, getOptionText, translate]);
 
     const filterOptions = useCallback(
-      option => {
-        const oText = getValueForComparison(resolvedGetOptionText(option));
+      (option) => {
+        const oText = getValueForComparison(getOptionText(option,null,translate));
         return (
-          values.filter(v => {
+          values.filter((v) => {
             v = getValueForComparison(v ?? '');
             return !v || (oText?.includes(v) && (!distinct || oText !== v));
           }).length > 0
         );
       },
-      [values, resolvedGetOptionText, getValueForComparison, distinct],
+      [values, getOptionText, getValueForComparison, distinct, translate],
     );
 
-          const getOptionByText = useCallback(
-            text => {
-              return optionList.find(o => (
-                getValueForComparison(resolvedGetOptionText(o)) ===
-                getValueForComparison(text)
-              ));
+    const getOptionByText = useCallback(
+      (text) => {
+        return optionList.find(
+          (o) =>
+            getValueForComparison(getOptionText(o,null,translate)) ===
+            getValueForComparison(text),
+        );
       },
-      [optionList, resolvedGetOptionText, getValueForComparison],
+      [optionList, getOptionText, getValueForComparison, translate],
     );
 
     const getSelectedOptions = useCallback(() => {
       const opts =
-      values.map(
-        v => getOptionByText(v) ?? (addOption ? addOption.byText(v) : null),
-      ) ?? [];
+        values.map(
+          (v) => getOptionByText(v) ?? (addOption ? addOption.byText(v) : null),
+        ) ?? [];
       if (multiple) {
         return opts;
       }
@@ -325,17 +371,15 @@ const Text = forwardRef(
     const getValue = useCallback(() => {
       const selected = getSelectedOptions();
       if (multiple) {
-        return (selected ?? []).map(o => resolvedGetOptionValue(o));
+        return (selected ?? []).map((o) => getOptionValue(o));
       }
-      return selected ? resolvedGetOptionValue(selected) : null;
-    }, [getSelectedOptions, resolvedGetOptionValue, multiple]);
+      return selected ? getOptionValue(selected) : null;
+    }, [getSelectedOptions, getOptionValue, multiple]);
 
     const getLastInsertText = useCallback(
-      () => values[values.length - 1]
-      , [values]);
-
-
-
+      () => values[values.length - 1],
+      [values],
+    );
 
     useImperativeHandle(
       ref,
@@ -350,7 +394,15 @@ const Text = forwardRef(
         setOptions: setOptionsOverride,
         getLastInsertText,
       }),
-      [textRef, getValue, getSelectedOptions, setRealValues, setValues, setOptionsOverride, getLastInsertText],
+      [
+        textRef,
+        getValue,
+        getSelectedOptions,
+        setRealValues,
+        setValues,
+        setOptionsOverride,
+        getLastInsertText,
+      ],
     );
 
     const placeholderPress = useCallback((index) => {
@@ -359,61 +411,107 @@ const Text = forwardRef(
     }, []);
 
     const onClose = useCallback(() => {
+      clearPendingDynamicOptionsRefresh();
+      dynamicRequestSequenceRef.current += 1;
       setFocusedIndex(null);
+      setLoadingDynamicOptions(false);
       setOptionsVisible(false);
-    }, []);
+    }, [clearPendingDynamicOptionsRefresh]);
     const onOptionPress = useCallback(
-      option => {
+      (option) => {
         const newValues = [...values];
         const newRealValues = [...realValues];
 
         // Ottieni le opzioni selezionate prima della modifica
         const currentSelectedOptions = getSelectedOptions();
 
-        newValues[focusedIndex] = resolvedGetOptionText(option);
-        newRealValues[focusedIndex] = resolvedGetOptionValue(option);
+        newValues[focusedIndex] = getOptionText(option, null,translate);
+        newRealValues[focusedIndex] = getOptionValue(option);
 
         // Notify parent component about the value change
         if (onChangeValue) {
           onChangeValue(multiple ? newRealValues : newRealValues[0]);
         }
-        if (onChangeOption && realValues[focusedIndex] !== resolvedGetOptionValue(option)) {
+        if (
+          onChangeOption &&
+          realValues[focusedIndex] !== getOptionValue(option)
+        ) {
           onChangeOption(currentSelectedOptions, option);
         }
         setValues(newValues);
         setRealValues(newRealValues);
         onClose();
       },
-      [values, focusedIndex, onClose, onChangeValue, multiple, realValues, getSelectedOptions, resolvedGetOptionText, resolvedGetOptionValue, onChangeOption],
+      [
+        values,
+        focusedIndex,
+        onClose,
+        onChangeValue,
+        multiple,
+        realValues,
+        getSelectedOptions,
+        getOptionText,
+        getOptionValue,
+        onChangeOption,
+        translate
+      ],
     );
 
     const [displayedOptions, setDisplayedOptions] = useState([]);
 
     const refreshDynamicOptions = useCallback(
       async (searchText = '') => {
+        const requestId = dynamicRequestSequenceRef.current + 1;
+        dynamicRequestSequenceRef.current = requestId;
+
         if (!isDynamicOptionsSource(currentOptionsSource)) {
           setResolvedDynamicOptions(null);
+          setLoadingDynamicOptions(false);
           return;
         }
+
+        const selectedRealValue =
+          focusedIndex == null ? null : realValues[focusedIndex];
         if (typeof currentOptionsSource.setParam === 'function') {
-          currentOptionsSource.setParam(realValues[focusedIndex], searchText);
+          currentOptionsSource.setParam(selectedRealValue, searchText);
         }
+        setLoadingDynamicOptions(true);
         try {
           const nextOptions = await currentOptionsSource.toArray();
-          setResolvedDynamicOptions(Array.isArray(nextOptions) ? nextOptions : normalizeOptions(nextOptions));
+          if (dynamicRequestSequenceRef.current !== requestId) {
+            return;
+          }
+          setResolvedDynamicOptions(
+            Array.isArray(nextOptions)
+              ? nextOptions
+              : normalizeOptions(nextOptions),
+          );
         } catch {
+          if (dynamicRequestSequenceRef.current !== requestId) {
+            setLoadingDynamicOptions(false);
+            return;
+          }
           setResolvedDynamicOptions([]);
+        } finally {
+          if (dynamicRequestSequenceRef.current === requestId) {
+            setLoadingDynamicOptions(false);
+          }
         }
       },
       [currentOptionsSource, focusedIndex, realValues],
     );
 
     const updateOptions = useCallback(() => {
-      const res = (optionList ?? []).filter(filterOptions).sort(resolvedSortOptions);
-      setDisplayedOptions(prev =>
-        areOptionListsEqual(prev, res ?? [], resolvedGetOptionValue) ? prev : (res ?? []),
+      const res = (optionList ?? []).filter(filterOptions).sort(sortOptions);
+      setDisplayedOptions((prev) =>
+        areOptionListsEqual(prev, res ?? [], getOptionValue) ? prev : res ?? [],
       );
-    }, [optionList, filterOptions, resolvedSortOptions, resolvedGetOptionValue]);
+    }, [
+      optionList,
+      filterOptions,
+      sortOptions,
+      getOptionValue,
+    ]);
 
     useEffect(() => {
       if (optionsVisible) {
@@ -425,121 +523,176 @@ const Text = forwardRef(
       if (!optionsVisible) {
         return;
       }
-      refreshDynamicOptions(values[focusedIndex] ?? '');
-    }, [optionsVisible, focusedIndex, values, refreshDynamicOptions]);
+      if (focusedIndex == null) {
+        return;
+      }
+      clearPendingDynamicOptionsRefresh();
+      if (!dynamicOptionsDelay || dynamicOptionsDelay <= 0) {
+        refreshDynamicOptions(values[focusedIndex] ?? '');
+        return;
+      }
 
+      dynamicOptionsTimeoutRef.current = setTimeout(() => {
+        dynamicOptionsTimeoutRef.current = null;
+        refreshDynamicOptions(values[focusedIndex] ?? '');
+      }, dynamicOptionsDelay);
 
-const changeText = useCallback(text => {
-                    const newValues = values.map((v, i) => (i === focusedIndex ? text : v));
-                    setValues(newValues);
+      return clearPendingDynamicOptionsRefresh;
+    }, [
+      optionsVisible,
+      focusedIndex,
+      values,
+      refreshDynamicOptions,
+      dynamicOptionsDelay,
+      clearPendingDynamicOptionsRefresh,
+    ]);
 
-                    // Update real values and notify parent component
-                    const newRealValues = [...realValues];
-                    newRealValues[focusedIndex] = text;
-                    setRealValues(newRealValues);
+    useEffect(
+      () => clearPendingDynamicOptionsRefresh,
+      [clearPendingDynamicOptionsRefresh],
+    );
 
-                    if (onChangeValue) {
-                      onChangeValue(multiple ? newRealValues : newRealValues[0]);
-                    }
+    const changeText = useCallback(
+      (text) => {
+        const newValues = values.map((v, i) => (i === focusedIndex ? text : v));
+        setValues(newValues);
 
-                    refreshDynamicOptions(text);
-                    setOptionsVisible(text.length > 0);
-                  }, [focusedIndex, values, realValues, onChangeValue, multiple, refreshDynamicOptions]);
-    const deleteIcon = ({style: iconStyle}) => (
-                    <Icon
-                      name="trash-can-outline"
-                      size={18}
-                      color={tokens.colors.danger}
-                      style={iconStyle}
-                    />
-                  )
+        // Update real values and notify parent component
+        const newRealValues = [...realValues];
+        newRealValues[focusedIndex] = text;
+        setRealValues(newRealValues);
+
+        if (onChangeValue) {
+          onChangeValue(multiple ? newRealValues : newRealValues[0]);
+        }
+
+        setOptionsVisible(text.length > 0);
+      },
+      [focusedIndex, values, realValues, onChangeValue, multiple],
+    );
+    const deleteIcon = ({ style: iconStyle }) => (
+      <Icon
+        name="trash-can-outline"
+        size={18}
+        color={tokens.colors.danger}
+        style={iconStyle}
+      />
+    );
 
     return (
       <View style={resolvedStyle?.input}>
         {values.map((value, index) => (
           <View
             key={index}
-            style={[resolvedStyle.row, resolvedStyle?.rowByIndex?.[index]]}>
+            style={[resolvedStyle.row, resolvedStyle?.rowByIndex?.[index]]}
+          >
             <Button
-              icon={resolvedGetOptionIcon(value)}
+              icon={getOptionIcon(value)}
               text={value ?? placeholder ?? '...'}
               // variant="ghost"
-              style={{wrapper: [(style?.multipleInputElement ?? {flex: 1, height:40}),{backgroundColor:'white'}], text: {color:'black'}}}
-              onPress={()=>placeholderPress(index)} />
-              <Button
-                  icon={deleteIcon}
-                  style={fuseObjects(
-                    resolvedStyle.cancelButton,
-                    style?.multipleInputButton,
-                    style?.multipleInputButtonCancel,
-                  )}
-                  onPress={() => {
-                    const newValues = values.filter((v, i) => i !== index);
-                    setValues(newValues.length > 0 ? newValues : ['']);
-                  }}
-                />
+              style={{
+                wrapper: [
+                  style?.multipleInputElement ?? { flex: 1, height: 40 },
+                  { backgroundColor: 'white' },
+                ],
+                text: { color: 'black' },
+              }}
+              onPress={() => placeholderPress(index)}
+            />
+            <Button
+              icon={deleteIcon}
+              style={fuseObjects(
+                resolvedStyle.cancelButton,
+                style?.multipleInputButton,
+                style?.multipleInputButtonCancel,
+              )}
+              onPress={() => {
+                const newValues = values.filter((v, i) => i !== index);
+                setValues(newValues.length > 0 ? newValues : ['']);
+              }}
+            />
             <ReactNativeModal
               isVisible={focusedIndex === index}
               onBackdropPress={onClose}
               // onRequestClose={() => setFocusedIndex(null)}
-              >
+            >
               <View style={resolvedStyle.modalBackdrop}>
-              <View style={[resolvedStyle.modalCard, style?.modalCard]}>
-              <View style={[resolvedStyle.modalRow, style?.modalRow]}>
-                <TextInput
-                  ref={(el) => {
-                      if (el) {
-                        textRef.current[index] = el;
-                        setTimeout(() => el.focus(), 60);
-                      }
-                    }
-                  }
-                  value={value}
-                  style={
-                    [resolvedStyle.textInput, style?.multipleInputElement, style?.textInput]
-                  }
-                  onChangeText={changeText}
-                  {...props}
-                />
-                <Button
-                  text="x"
-                  style={fuseObjects(
-                    resolvedStyle.cancelButton,
-                    style?.multipleInputButton,
-                    style?.multipleInputButtonCancel,
-                  )}
-                  onPress={() => {
-                    const newValues = values.filter((v, i) => i !== index);
-                    const newRealValues = realValues.filter((v, i) => i !== index);
+                <View style={[resolvedStyle.modalCard, style?.modalCard]}>
+                  <View style={[resolvedStyle.modalRow, style?.modalRow]}>
+                    <TextInput
+                      ref={(el) => {
+                        if (el) {
+                          textRef.current[index] = el;
+                          setTimeout(() => el.focus(), 60);
+                        }
+                      }}
+                      value={value}
+                      style={[
+                        resolvedStyle.textInput,
+                        style?.multipleInputElement,
+                        style?.textInput,
+                      ]}
+                      onChangeText={changeText}
+                      {...props}
+                    />
+                    <Button
+                      text="x"
+                      style={fuseObjects(
+                        resolvedStyle.cancelButton,
+                        style?.multipleInputButton,
+                        style?.multipleInputButtonCancel,
+                      )}
+                      onPress={() => {
+                        const newValues = values.filter((v, i) => i !== index);
+                        const newRealValues = realValues.filter(
+                          (v, i) => i !== index,
+                        );
 
-                    setValues(newValues.length > 0 ? newValues : ['']);
-                    setRealValues(newRealValues.length > 0 ? newRealValues : ['']);
+                        setValues(newValues.length > 0 ? newValues : ['']);
+                        setRealValues(
+                          newRealValues.length > 0 ? newRealValues : [''],
+                        );
 
-                    if (onChangeValue) {
-                      onChangeValue(multiple ? newRealValues : newRealValues[0]);
-                    }
-                  }}
-                />
-              </View>
-              <View style={[{padding: tokens.spacing.md}, style?.optionsWrapper]}>
-              {showOptionList && (
-                <Options
-                  options={displayedOptions}
-                  getOptionValue={resolvedGetOptionValue}
-                  getOptionText={resolvedGetOptionText}
-                  getOptionIcon={resolvedGetOptionIcon}
-                  onOptionPress={onOptionPress}
-                  addOption={addOption}
-                  ignoreCase={ignoreCase}
-                  multiple={multiple}
-                  visible={optionsVisible}
-                  onDismiss={() => setOptionsVisible(false)}
-                  style={style?.options ?? resolvedStyle?.options}
-                />
-              )}
-
-              </View>
-              </View>
+                        if (onChangeValue) {
+                          onChangeValue(
+                            multiple ? newRealValues : newRealValues[0],
+                          );
+                        }
+                      }}
+                    />
+                  </View>
+                  <View
+                    style={[
+                      { padding: tokens.spacing.md },
+                      style?.optionsWrapper,
+                    ]}
+                  >
+                    {loadingDynamicOptions && displayedOptions.length === 0 ? (
+                      <Loading style={style?.loadingOptions} />
+                    ) : (
+                      <>
+                        {loadingDynamicOptions && (
+                          <Loading style={style?.loadingOptions} />
+                        )}
+                        {showOptionList && (
+                      <Options
+                        options={displayedOptions}
+                        getOptionValue={getOptionValue}
+                        getOptionText={getOptionText}
+                        getOptionIcon={getOptionIcon}
+                        onOptionPress={onOptionPress}
+                        addOption={addOption}
+                        ignoreCase={ignoreCase}
+                        multiple={multiple}
+                        visible={optionsVisible}
+                        onDismiss={() => setOptionsVisible(false)}
+                        style={style?.options ?? resolvedStyle?.options}
+                      />
+                        )}
+                      </>
+                    )}
+                  </View>
+                </View>
               </View>
             </ReactNativeModal>
           </View>
@@ -547,11 +700,13 @@ const changeText = useCallback(text => {
         {multiple && (
           <Button
             text="+"
-            style={fuseObjects(resolvedStyle.addButton, style?.multipleInputButton)}
+            style={fuseObjects(
+              resolvedStyle.addButton,
+              style?.multipleInputButton,
+            )}
             onPress={() => setValues([...values, ''])}
           />
         )}
-
       </View>
     );
   },
@@ -581,6 +736,7 @@ Text.propTypes = {
   addOption: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
   sortOptions: PropTypes.func,
   ignoreCase: PropTypes.bool,
+  dynamicOptionsDelay: PropTypes.number,
   showOptionList: PropTypes.bool, // Cambiato da showList a showOptionList
 };
 export default Text;

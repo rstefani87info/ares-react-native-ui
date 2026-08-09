@@ -2,6 +2,7 @@
 import en_us from './en-US';
 import it_it from './it-IT';
 import { config } from '../../config';
+import { en_us as en_us_geo, it_it as it_it_geo } from '@ares/react-native-geo/locales/languages';
 
 const languages = {
   enUS: {
@@ -9,14 +10,16 @@ const languages = {
     code: 'en-US',
     region: 'US',
     languageCode: 'en',
-    strings:  en_us,
+    threeLanguageCode: 'eng',
+    strings:  {...en_us_geo, ...en_us},
   },
   itIT: {
     label: 'Italiano (Italia)',
     code: 'it-IT',
     region: 'IT',
     languageCode: 'it',
-    strings: it_it,
+    threeLanguageCode: 'ita',
+    strings:  {...it_it_geo, ...it_it},
   },
 };
 
