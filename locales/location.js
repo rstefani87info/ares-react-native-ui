@@ -40,17 +40,22 @@ export async function getLocation() {
   }
 
   return await new Promise((resolve) => {
-    Geolocation.getCurrentPosition(
-      position => {
-        const {latitude, longitude} = position.coords;
-        resolve({latitude, longitude, position});
-      },
-      error => {
-        config.logger?.error?.(error?.message ?? String(error));
-        resolve(null);
-      },
-      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-    );
+    try {
+      Geolocation.getCurrentPosition(
+        position => {
+          const {latitude, longitude} = position.coords;
+          resolve({latitude, longitude, position});
+        },
+        error => {
+          config.logger?.error?.(error?.message ?? String(error));
+          resolve(null);
+        },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      );
+    } catch (error) {
+      config.logger?.error?.(error?.message ?? String(error));
+      resolve(null);
+    }
   });
 }
 
@@ -64,30 +69,40 @@ export async function watchLocation(
     return null;
   }
 
-  return Geolocation.watchPosition(
-    position => {
-      const {latitude, longitude} = position.coords;
-      onLocation?.({latitude, longitude, position});
-    },
-    error => {
-      config.logger?.error?.(error?.message ?? String(error));
-      onError?.(error);
-    },
-    {
-      enableHighAccuracy: true,
-      distanceFilter: 0,
-      interval: 5000,
-      fastestInterval: 2000,
-      showLocationDialog: true,
-      forceRequestLocation: true,
-      ...options,
-    },
-  );
+  try {
+    return Geolocation.watchPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        onLocation?.({latitude, longitude, position});
+      },
+      error => {
+        config.logger?.error?.(error?.message ?? String(error));
+        onError?.(error);
+      },
+      {
+        enableHighAccuracy: true,
+        distanceFilter: 0,
+        interval: 5000,
+        fastestInterval: 2000,
+        showLocationDialog: true,
+        forceRequestLocation: true,
+        ...options,
+      },
+    );
+  } catch (error) {
+    config.logger?.error?.(error?.message ?? String(error));
+    onError?.(error);
+    return null;
+  }
 }
 
 export function clearLocationWatch(watchId) {
   if (watchId === null || watchId === undefined) {
     return;
   }
-  Geolocation.clearWatch(watchId);
+  try {
+    Geolocation.clearWatch(watchId);
+  } catch (error) {
+    config.logger?.error?.(error?.message ?? String(error));
+  }
 }

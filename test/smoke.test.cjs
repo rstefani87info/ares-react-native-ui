@@ -3,7 +3,12 @@ const renderer = require('react-test-renderer');
 
 jest.mock('react-native', () => {
   const React = require('react');
-  const make = (name) => ({children, ...props}) => React.createElement(name, props, children);
+  const make = (name) => ({children, ...props}) =>
+    React.createElement(
+      name,
+      props,
+      typeof children === 'function' ? children({pressed: false}) : children,
+    );
 
   return {
     View: make('View'),
@@ -48,6 +53,11 @@ jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => {
   return ({children, ...props}) => React.createElement('Icon', props, children);
 });
 
+jest.mock('react-native-vector-icons/FontAwesome6', () => {
+  const React = require('react');
+  return ({children, ...props}) => React.createElement('Icon', props, children);
+});
+
 jest.mock('react-native-device-info', () => ({
   getUniqueId: jest.fn(() => Promise.resolve('device-id')),
 }));
@@ -66,6 +76,11 @@ jest.mock('react-native-localize', () => ({
   getLocales: () => [{languageTag: 'en-US', languageCode: 'en', countryCode: 'US'}],
   getCountry: () => 'US',
 }));
+
+jest.mock('@ares/react-native-geo/locales/languages', () => ({
+  en_us: {},
+  it_it: {},
+}), {virtual: true});
 
 test('ApplicationRoot renders with minimal aReS config', async () => {
   const {act} = renderer;
@@ -105,6 +120,36 @@ test('Text field renders', () => {
   act(() => {
     renderer.create(React.createElement(Text, {id: 'text', name: 'text', options: [], style: {input: {}}}));
   });
+});
+
+test('Text field clears persisted value when delete button is pressed', () => {
+  const {act} = renderer;
+  const Text = require('../components/input/fields/Text/index.jsx').default;
+  const Button = require('../components/input/actions/Button.jsx').default;
+
+  const onChangeValue = jest.fn();
+  let tree;
+
+  act(() => {
+    tree = renderer.create(
+      React.createElement(Text, {
+        id: 'text',
+        name: 'text',
+        value: 'persisted-value',
+        options: [],
+        onChangeValue,
+        style: {input: {}},
+      }),
+    );
+  });
+
+  const buttons = tree.root.findAllByType(Button);
+
+  act(() => {
+    buttons[1].props.onPress();
+  });
+
+  expect(onChangeValue).toHaveBeenLastCalledWith('');
 });
 
 test('Modal renders', () => {
